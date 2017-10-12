@@ -17,7 +17,7 @@ class Authors extends Rest
 
     /**
      * Add author to table.
-     * hash(admin) | name - input.
+     * hash(admin) | name(author) - input.
      * Return 200 or 400+.
      */
     protected function postAuthors()
@@ -40,7 +40,7 @@ class Authors extends Rest
 
     /**
      * Change of author's name.
-     * hash(admin) | id(authors) | name(new) - input.
+     * hash(admin) | id(authors) | name(new author) - input.
      * Return 200 or 400+.
      */
     protected function putAuthors()
@@ -69,14 +69,14 @@ class Authors extends Rest
     }
 
     /**
-     * Removing a book from a cart.
-     * /hash/id(books) - input.
+     * Removing an author from a table.
+     * /hash(admin)/id(author) - input.
      * Return 200 or 400+.
      */
     protected function deleteAuthors()
     {
-        list($arrParams['id_user'],
-             $arrParams['id_book']
+        list($arrParams['hash'],
+             $arrParams['id']
         ) = explode('/', $this->params['params'], 3);
 
         if ( !$id = $this->getUserIdByHash($arrParams['id_user']) )
