@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Error code information</title>
+</head>
+<body>
+    <p>[000]: The application is allowed only GET, POST, PUT, DELETE | Rest::fragmentation</p>
+    <p>[001]: There is no such method | rest/Rest::play</p>
+    <p>[002]: The database did not return the result to your query (Or there is no such data in the table)</p>
+    <p>[003]: Data has not been validated during registration (login) | user/Users::postUsers</p>
+    <p>[004]: This login already exists in the database | user/Users::postUsers</p>
+    <p>[005]: Data has not been validated during registration (password) | user/Users::postUsers</p>
+    <p>[006]: Data has not been validated during registration (phone) | user/Users::postUsers</p>
+    <p>[007]: Data has not been validated during authorization (login) | user/Users::putUsers</p>
+    <p>[008]: Data has not been validated during authorization (password) | user/Users::putUsers</p>
+    <p>[009]: Login is incorrect (authorization) | user/Users::putUsers</p>
+    <p>[010]: Password is incorrect (authorization) | user/Users::putUsers</p>
+    <p>[011]: The hash was not found in the table | user/Users::deleteUsers</p>
+    <p>[012]: Did not pass validation (login) | user/Users::getUsersByParams</p>
+    <p>[013]: The hash time expired, you need a new authorization | user/Users::getUsersByParams</p>
+    <p>[014]: Not a valid request /null(or false)/hash or /login | user/Users::getUsersByParams</p>
+    <p>[015]: The hash was not found in the table | user/Cart::getCartByParams</p>
+    <p>[016]: The hash was not found in the table | user/Cart::postCart</p>
+    <p>[017]: The id was not found in the table books | user/Cart::postCart</p>
+    <p>[018]: Did not pass validation (count), need a number | user/Cart::postCart</p>
+    <p>[019]: This book is already in the user cart | user/Cart::postCart</p>
+    <p>[020]: The hash was not found in the table | user/Cart::putCart</p>
+    <p>[021]: Did not pass validation (id), need a number | user/Cart::putCart</p>
+    <p>[022]: Did not pass validation (count), need a number | user/Cart::putCart</p>
+    <p>[023]: There is no such book in the cart | user/Cart::putCart</p>
+    <p>[024]: The hash was not found in the table | user/Cart::deleteCart</p>
+    <p>[025]: There is no such book in the cart | user/Cart::deleteCart</p>
+    <p>[026]: Did not pass validation (id), need a number | user/Cart::deleteCart</p>
+    <p>[027]: The hash was not found in the table | user/Orders::postOrders</p>
+    <p>[028]: The id was not found in the payment | user/Orders::postOrders</p>
+    <p>[029]: No products found in the user's cart | user/Orders::postOrders</p>
+    <p>[030]: The hash was not found in the table | user/Orders::getOrdersByParams</p>
+    <p>[031]: Order was not added to the database | user/Orders::postOrders</p>
+    <p>[032]: Transaction error | user/Orders::postOrders</p>
+    <p>[033]: You do not have administrator rights.</p>
+    <p>[034]: Data has not been validated (author name) | admin/Authors::postAuthors</p>
+    <p>[035]: The id was not found in the authors | admin/Authors::putAuthors</p>
+    <p>[036]: Data has not been validated (author name) | admin/Authors::putAuthors</p>
+    
+
+
+    <p>[004]: Data has not been validated during registration (firstname) | Users::postUsers</p>
+    <p>[005]: Data has not been validated during registration (lasttname) | Users::postUsers</p>
+    <p>
+        [017]: Invalid parameters for a query must be in a certain sequence: | Cars::getCarsByParams <br>
+                id/mark/model/year/engine/color/speed/price <br>
+                Example: <br>
+                - false/null/model/false/false/null/speed <br>
+                - 1/bmw/x6 <br>
+                - null/null/x6/false/null/white <br>
+                - etc. <br>
+                FALSE or NULL - that would not take this.
+    </p>
+    <p>[018]: No user found with such hash or the transmitted hash is not correct. | Orders::getUserIdByHash</p>
+    <p>[019]: There is no such cars id in the database or the transmitted cars id is not correct. | Orders::postOrders</p>
+    <p>[020]: Payment must be "card" or "cash" only. Or the transmitted payment is not correct. | Orders::postOrders</p>
+    <p>[021]: There is no such orders id in the database or the transmitted orders id is not correct. | Orders::putOrders</p>
+    <p>[022]: Status must be "0"(Not delivered) or "1"(Delivered) only. Or the transmitted status is not correct. | Orders::putOrders</p>
+    <p>
+        [023]: There is no such record in the table. The user id and the orders id have not been tested. | Orders::putOrders <br>
+               Or the transmitted status is not correct.
+    </p>
+</body>
+</html>

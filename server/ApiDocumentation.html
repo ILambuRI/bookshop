@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Documentation</title>
+</head>
+<body>
+    <h3>Shop:</h3>
+    <p>authors:</p>
+    <p>[GET] bookshop/client/api/shop/authors/ | Get all the authors from the table. (grouping by id)</p>
+    <p>[GET] bookshop/client/api/shop/authors/(id) | Get full information about the author by id</p>
+    <p>genres:</p>
+    <p>[GET] bookshop/client/api/shop/genres/ | Get all the genres from the table. (grouping by id)</p>
+    <p>[GET] bookshop/client/api/shop/genres/(id) | Get full information about the genre by id</p>
+    <p>books:</p>
+    <p>[GET] bookshop/client/api/shop/books/ | Get all the books from the table</p>
+    <p>[GET] bookshop/client/api/shop/books/(id) | Get full information about the book by id</p>
+    <p>payment:</p>
+    <p>[GET] bookshop/client/api/shop/payment/ | Get all the payments from the table. (grouping by id)</p>
+    <br><br>
+
+    <h3>User:</h3>
+    <p>users:</p>
+    <p>
+        [GET] bookshop/client/api/user/users/(login)/(hash) <br>
+        /null(or false)/hash - check hash in table or hash lifetime. <br>
+        /login - check if there is a login in the table. <br>
+        Return 200 or 400+.
+    </p>
+    <p>
+        [POST] bookshop/client/api/user/users/ <br>
+        Registration - write a new user in table. <br>
+        Input: 3 < login > 20 - unique | 5 < password > 32 | 6 < phone > 20 <br>
+        Return hash for autologin or 400+.
+    </p>
+    <p>
+        [PUT] bookshop/client/api/user/users/ <br>
+        Login - user authorization, if it is in the table. Return new hash. <br>
+        Input: 3 < login > 20 - unique | 5 < password > 32. <br>
+        Return new hash or 400+.
+    </p>
+    <p>
+        [DELETE] bookshop/client/api/user/users/(hash) <br>
+        Logout - removing (updating) a hash in table. <br>
+        Return 200 or 400+.
+    </p>
+
+    <p>cart:</p>
+    <p>
+        [GET] bookshop/client/api/user/cart/(hash) <br>
+        Getting all the books from the cart by user hash <br>
+        /hash - input. <br>
+        Return array or 400+.
+    </p>
+    <p>
+        [POST] bookshop/client/api/user/cart/ <br>
+        Adding a book to the cart. <br>
+        hash | id(book) | count - input. <br>
+        Return 200 or 400+.            
+    </p>
+    <p>
+        [PUT] bookshop/client/api/user/cart/ <br>
+        Changing the number of books in the cart. <br>
+        hash | id(book) | count - input. <br>
+        Return 200 or 400+.
+    </p>
+    <p>
+        [DELETE] bookshop/client/api/user/cart/(hash)/(id) <br>
+        Removing a book from a cart. <br>
+        /hash/id(book) - input. <br>
+        Return 200 or 400+.
+    </p>
+
+    <p>orders:</p>
+    <p>
+        [GET] bookshop/client/api/user/orders/(hash) <br>
+        Receive all user orders through a unique users hash. <br>
+        /hash - input. <br>
+        Return array or 400+.
+    </p>
+    <p>
+        [POST] bookshop/client/api/user/orders/ <br>
+        Record a new order in the table orders(and info_order) and clear user cart. <br>
+        hash | id(payment) - input. <br>
+        Return order ID or 400+.
+    </p>
+    </body>
+</html>
