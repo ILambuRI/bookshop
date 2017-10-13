@@ -13,8 +13,9 @@ class Genres extends Rest
     }
     
     /**
-     * Get the whole table of genres
-     * Return array grouped by id
+     * Get the whole table of genres.
+     * Delete 0 ID (Empty) from the result.
+     * Return array grouped by id.
      */
     protected function getGenres()
     {
@@ -27,6 +28,8 @@ class Genres extends Rest
 
         if (!$result)
             $this->response( '', 404, '002', true );
+        
+        array_splice($result, 0, 1);
 
         $this->response($result);
     }
@@ -34,11 +37,13 @@ class Genres extends Rest
     /**
      * Get full information about the genre by id.
      * /id - input.
-     * Return array
+     * Return array.
      */
     protected function getGenresByParams()
     {
         $id = $this->params['params'];
+        if ($id == '0')
+            $this->response( '', 404, '002', true );
         
         $sql = 'SELECT bookshop_genres.id,
                        bookshop_genres.genresName

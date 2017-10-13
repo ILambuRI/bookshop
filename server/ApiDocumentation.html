@@ -8,21 +8,45 @@
 </head>
 <body>
     <h3>Shop:</h3>
-    <p>authors:</p>
-    <p>[GET] bookshop/client/api/shop/authors/ | Get all the authors from the table. (grouping by id)</p>
-    <p>[GET] bookshop/client/api/shop/authors/(id) | Get full information about the author by id</p>
-    <p>genres:</p>
-    <p>[GET] bookshop/client/api/shop/genres/ | Get all the genres from the table. (grouping by id)</p>
-    <p>[GET] bookshop/client/api/shop/genres/(id) | Get full information about the genre by id</p>
-    <p>books:</p>
-    <p>[GET] bookshop/client/api/shop/books/ | Get all the books from the table</p>
-    <p>[GET] bookshop/client/api/shop/books/(id) | Get full information about the book by id</p>
-    <p>payment:</p>
-    <p>[GET] bookshop/client/api/shop/payment/ | Get all the payments from the table. (grouping by id)</p>
+    <p><strong>authors:</strong></p>
+    <p>
+        [GET] bookshop/client/api/shop/authors/ <br>
+        Get all the authors from the table. (grouping by id)
+    </p>
+    <p>
+        [GET] bookshop/client/api/shop/authors/(id) <br>
+        Get full information about the author by id
+    </p>
+
+    <p><strong>genres:</strong></p>
+    <p>
+        [GET] bookshop/client/api/shop/genres/ <br>
+        Get all the genres from the table. (grouping by id)
+    </p>
+    <p>
+        [GET] bookshop/client/api/shop/genres/(id) <br>
+        Get full information about the genre by id
+    </p>
+
+    <p><strong>books:</strong></p>
+    <p>
+        [GET] bookshop/client/api/shop/books/ <br>
+        Get all the books from the table
+    </p>
+    <p>
+        [GET] bookshop/client/api/shop/books/(id) <br>
+        Get full information about the book by id
+    </p>
+
+    <p><strong>payment:</strong></p>
+    <p>
+        [GET] bookshop/client/api/shop/payment/ <br>
+        Get all the payments from the table. (grouping by id)
+    </p>
     <br><br>
 
     <h3>User:</h3>
-    <p>users:</p>
+    <p><strong>users:</strong></p>
     <p>
         [GET] bookshop/client/api/user/users/(login)/(hash) <br>
         /null(or false)/hash - check hash in table or hash lifetime. <br>
@@ -47,7 +71,7 @@
         Return 200 or 400+.
     </p>
 
-    <p>cart:</p>
+    <p><strong>cart:</strong></p>
     <p>
         [GET] bookshop/client/api/user/cart/(hash) <br>
         Getting all the books from the cart by user hash <br>
@@ -73,7 +97,7 @@
         Return 200 or 400+.
     </p>
 
-    <p>orders:</p>
+    <p><strong>orders:</strong></p>
     <p>
         [GET] bookshop/client/api/user/orders/(hash) <br>
         Receive all user orders through a unique users hash. <br>
@@ -85,6 +109,60 @@
         Record a new order in the table orders(and info_order) and clear user cart. <br>
         hash | id(payment) - input. <br>
         Return order ID or 400+.
+    </p>
+
+    <h3>Admin:</h3>
+    <p><strong>authors:</strong></p>
+    <p>
+        [POST] bookshop/client/api/admin/authors/ <br>
+        Add author to table. <br>
+        hash(admin) | name(author) - input. <br>
+        Return 200 or 400+.
+    </p>
+    <p>
+        [PUT] bookshop/client/api/admin/authors/ <br>
+        Change of author's name. <br>
+        hash(admin) | id(authors) | name(new author name) - input. <br>
+        Return 200 or 400+.
+    </p>
+    <p>
+        [DELETE] bookshop/client/api/admin/authors/(hash)/(id) <br>
+        Removing an author from a table. <br>
+        /hash(admin)/id(author) - input. <br>
+        Return 200 or 400+.
+    </p>
+
+    <p><strong>genres:</strong></p>
+    <p>
+        [POST] bookshop/client/api/admin/genres/ <br>
+        Add genre to table. <br>
+        hash(admin) | name(genre) - input. <br>
+        Return 200 or 400+.
+    </p>
+    <p>
+        [PUT] bookshop/client/api/admin/genres/ <br>
+        Change of genre name. <br>
+        hash(admin) | id(genres) | name(new genre name) - input. <br>
+        Return 200 or 400+.
+    </p>
+    <p>
+        [DELETE] bookshop/client/api/admin/genres/(hash)/(id) <br>
+        Removing an genre from a table. <br>
+        /hash(admin)/id(genre) - input. <br>
+        Return 200 or 400+.
+    </p>
+    <p><strong>orders:</strong></p>
+    <p>
+        [GET] bookshop/client/api/admin/orders/ <br>
+        Receive all orders for admin. <br>
+        /hash(admin) - input. <br>
+        Return array.
+    </p>
+    <p>
+        [PUT] bookshop/client/api/admin/orders/ <br>
+        Set a new status for the order. <br>
+        hash(admin) | idOrder | idStatus - input. <br>
+        Return 200 or 400+.
     </p>
     </body>
 </html>

@@ -5,7 +5,7 @@ require_once("../Db.php");
 use services\Validate;
 use services\Convert;
 
-class Cart extends Rest
+class Genres extends Rest
 {
     /**Database object (PDO)*/
     private $db;
@@ -14,59 +14,58 @@ class Cart extends Rest
     {
         $this->db = new Db();
     }
-    
+
     /**
-     * /hash - getting all the books from the cart by user hash.
-     * Return array.
+     * Add genre to table.
+     * hash(admin) | name(genre) - input.
+     * Return 200 or 400+.
      */
-    protected function getCartByParams()
+    protected function postGenres()
     {
-        if ( !$id = $this->getUserIdByHash($this->params['params']) )
-            $this->response( '', 404, '015', true );
-        
-        $sql = 'SELECT bookshop_books.booksName,
-                       bookshop_cart.count,
-                       bookshop_books.price,
-                       bookshop_discounts.percent
-                FROM bookshop_cart
-                    INNER JOIN bookshop_books
-                        ON bookshop_cart.id_book = bookshop_books.id
-                    INNER JOIN bookshop_discounts
-                        ON bookshop_books.id_discount = bookshop_discounts.id
-                WHERE bookshop_cart.id_user = :id';
-        $result = $this->db->execute($sql, ['id' => $id[0]['id']]);
-        
+        if ( !$this->checkAdminRights($this->params['hash']) )
+            $this->response( '', 406, '033', true );
+            
+        if ( !Validate::checkName($this->params['name']) )
+            $this->response( '', 406, '040', true );
+
+        if ( $this->checkGenresName($this->params['name']) )
+            $this->response( '', 406, '041', true );
+
+        $sql = 'INSERT INTO bookshop_genres (genresName)
+                VALUES (:genresName)';
+        $result = $this->db->execute($sql, ['genresName' => $this->params['name']]);
+
         if (!$result)
             $this->response( '', 404, '002', true );
 
-        $this->response($result);
+        $this->response();
     }
 
     /**
-     * Adding a book to the cart.
-     * hash | id(books) | count - input.
+     * Change of genre's name.
+     * hash(admin) | id(genres) | name(new genre) - input.
      * Return 200 or 400+.
      */
-    protected function postCart()
+    protected function putGenres()
     {
-        if ( !$id = $this->getUserIdByHash($this->params['hash']) )
-            $this->response( '', 404, '016', true );
-
-        if ( !$this->checkBookId($this->params['id']) )
-            $this->response( '', 404, '017', true );
-            
-        if ( !Validate::onlyNumbers($this->params['count']) )
-            $this->response( '', 406, '018', true );
+        if ( !$this->checkAdminRights($this->params['hash']) )
+            $this->response( '', 406, '033', true );
         
-        if ( $this->checkBookInCart($id[0]['id'], $this->params['id']) )
-            $this->response( '', 406, '019', true );
+        if ( !$this->checkGenresId($this->params['id']) )
+            $this->response( '', 404, '042', true );
             
-        $arrParams['id_user'] = $id[0]['id'];
-        $arrParams['id_book'] = $this->params['id'];
-        $arrParams['count'] = $this->params['count'];
+        if ( !Validate::checkName($this->params['name']) )
+            $this->response( '', 406, '043', true );
 
-        $sql = 'INSERT INTO bookshop_cart (id_user, id_book, count)
-                VALUES (:id_user, :id_book, :count)';
+        if ( $this->checkGenresName($this->params['name']) )
+            $this->response( '', 406, '044', true );
+
+        $arrParams['id'] = $this->params['id'];
+        $arrParams['genresName'] = $this->params['name'];
+    
+        $sql = 'UPDATE bookshop_genres
+                SET genresName = :genresName
+                WHERE id = :id';
         $result = $this->db->execute($sql, $arrParams);
 
         if (!$result)
@@ -76,65 +75,29 @@ class Cart extends Rest
     }
 
     /**
-     * Changing the number of books in the cart.
-     * hash | id(books) | count - input.
+     * Removing an genre from a table.
+     * /hash(admin)/id(genre) - input.
+     * Put 0 id (empty) in the binding table.
      * Return 200 or 400+.
      */
-    protected function putCart()
+    protected function deleteGenres()
     {
-        if ( !$id = $this->getUserIdByHash($this->params['hash']) )
-            $this->response( '', 404, '020', true );
-            
-        if ( !Validate::onlyNumbers($this->params['id']) )
-            $this->response( '', 406, '021', true );
-            
-        if ( !Validate::onlyNumbers($this->params['count']) )
-            $this->response( '', 406, '022', true );
-        
-        if ( !$this->checkBookInCart($id[0]['id'], $this->params['id']) )
-            $this->response( '', 404, '023', true );
-            
-        $arrParams['id_user'] = $id[0]['id'];
-        $arrParams['id_book'] = $this->params['id'];
-        $arrParams['count'] = $this->params['count'];
+        list($hash, $genreId) = explode('/', $this->params['params'], 3);
+
+        if ( !$this->checkAdminRights($hash) )
+            $this->response( '', 406, '033', true );
     
-        $sql = 'UPDATE bookshop_cart
-                SET count = :count
-                WHERE id_user = :id_user
-                AND id_book = :id_book';
-        $result = $this->db->execute($sql, $arrParams);
-
-        if (!$result)
-            $this->response( '', 404, '002', true );
-
-        $this->response();
-    }
-
-    /**
-     * Removing a book from a cart.
-     * /hash/id(books) - input.
-     * Return 200 or 400+.
-     */
-    protected function deleteCart()
-    {
-        list($arrParams['id_user'],
-             $arrParams['id_book']
-        ) = explode('/', $this->params['params'], 3);
-
-        if ( !$id = $this->getUserIdByHash($arrParams['id_user']) )
-            $this->response( '', 404, '024', true );
-            
-        if ( !Validate::onlyNumbers($arrParams['id_book']) )
-            $this->response( '', 406, '026', true );
-
-        if ( !$this->checkBookInCart($id[0]['id'], $arrParams['id_book']) )
-            $this->response( '', 404, '025', true );
+        if ( !$this->checkGenresId($genreId) )
+            $this->response( '', 404, '045', true );
         
-        $arrParams['id_user'] = $id[0]['id'];
-        $sql = 'DELETE FROM bookshop_cart
-                WHERE id_user = :id_user
-                AND id_book = :id_book';
-        $result = $this->db->execute($sql, $arrParams);
+        $sql = 'UPDATE bookshop_books_to_genres
+                SET id_genre = 0
+                WHERE id_genre = :id';
+        $this->db->execute($sql, ['id' => $genreId]);
+        
+        $sql = 'DELETE FROM bookshop_genres
+                WHERE id = :id';
+        $result = $this->db->execute($sql, ['id' => $genreId]);
         
         if (!$result)
             $this->response( '', 404, '002', true );
@@ -143,29 +106,12 @@ class Cart extends Rest
     }
 
     /** 
-     * Check book id in user cart.
+     * Check id in the table genres
      * Return bool
      */
-    protected function checkBookInCart($userId, $bookId)
+    protected function checkGenresId($id)
     {
-        $sql = 'SELECT id_book FROM bookshop_cart
-                WHERE id_user = :id_user
-                AND id_book = :id_book';
-        $result = $this->db->execute($sql, ['id_book' => $bookId, 'id_user'=> $userId]);
-        
-        if (!$result)
-            return FALSE;
-
-        return TRUE;
-    }
-
-    /** 
-     * Check id in the table books
-     * Return bool
-     */
-    protected function checkBookId($id)
-    {
-        $sql = 'SELECT id FROM bookshop_books WHERE id = :id';
+        $sql = 'SELECT id FROM bookshop_genres WHERE id = :id';
         $result = $this->db->execute($sql, ['id' => $id]);
         
         if (!$result)
@@ -175,25 +121,40 @@ class Cart extends Rest
     }
 
     /** 
-     * Get user id from the table users by hash
-     * Return id or false
+     * Check name in the table genres
+     * Return bool
      */
-    protected function getUserIdByHash($hash)
+    protected function checkGenresName($name)
     {
-        $sql = 'SELECT id FROM bookshop_users WHERE hash = :hash';
-        $result = $this->db->execute($sql, ['hash' => $hash]);
-
+        $sql = 'SELECT genresName FROM bookshop_genres WHERE genresName = :genresName';
+        $result = $this->db->execute($sql, ['genresName' => $name]);
+        
         if (!$result)
             return FALSE;
 
-        return $result;
+        return TRUE;
+    }
+
+    /** 
+     * Checking user access by hash.
+     * Return bool.
+     */
+    protected function checkAdminRights($hash)
+    {
+        $sql = 'SELECT admin FROM bookshop_users WHERE hash = :hash';
+        $result = $this->db->execute($sql, ['hash' => $hash]);
+
+        if (!$result or $result[0]['admin'] == 0)
+            return FALSE;
+
+        return TRUE;
     }
 }
 
 try
 {
-    $api = new Cart;
-    $api->table = 'cart';
+    $api = new Genres;
+    $api->table = 'genres';
     $api->play();
 }
 catch (Exception $e)

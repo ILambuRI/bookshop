@@ -27,6 +27,7 @@ class Orders extends Rest
                        bookshop_info_order.bookDiscount,
                        bookshop_info_order.count,
                        bookshop_info_order.bookTotalPrice,
+                       bookshop_payment.paymentName,
                        bookshop_orders.clientDiscount,
                        bookshop_orders.orderTotalPrice,
                        bookshop_orders.time,
@@ -47,7 +48,8 @@ class Orders extends Rest
         if (!$result)
             $this->response( '', 404, '002', true );
 
-        $this->response($result);
+        $orders = $this->formingOrders($result);
+        $this->response($orders);
     }
 
     /**
@@ -186,6 +188,49 @@ class Orders extends Rest
             return FALSE;
 
         return TRUE;
+    }
+
+    /**
+     * Generating the correct data for the response.
+     * Return array.
+     */
+    protected function formingOrders($result)
+    {
+        $orders = [];
+        foreach ($result as $value)
+        {
+            if ( isset($orders[$value['id']]) )
+            {
+                    $orders[$value['id']]['books'][] = [
+                        'booksName' => $value['booksName'],
+                        'bookDiscount' => $value['bookDiscount'],
+                        'count' => $value['count'],
+                        'bookTotalPrice' => $value['bookTotalPrice']
+                    ];
+            }
+            else
+            {
+                $orders[$value['id']] = [
+                    'id' => $value['id'],
+                    'paymentName' => $value['paymentName'],
+                    'clientDiscount' => $value['clientDiscount'],
+                    'orderTotalPrice' => $value['orderTotalPrice'],
+                    'time' => $value['time'],
+                    'statusName' => $value['statusName'],
+                    'books' => [
+                        [
+                            'booksName' => $value['booksName'],
+                            'bookDiscount' => $value['bookDiscount'],
+                            'count' => $value['count'],
+                            'bookTotalPrice' => $value['bookTotalPrice']
+                        ]
+                    ]
+                ];
+            }
+        }
+
+        $orders = array_values($orders);
+        return $orders;
     }
 }
 

@@ -28,6 +28,9 @@ class Authors extends Rest
         if ( !Validate::checkName($this->params['name']) )
             $this->response( '', 406, '034', true );
 
+        if ( $this->checkAuthorsName($this->params['name']) )
+            $this->response( '', 406, '038', true );
+
         $sql = 'INSERT INTO bookshop_authors (authorsName)
                 VALUES (:authorsName)';
         $result = $this->db->execute($sql, ['authorsName' => $this->params['name']]);
@@ -54,6 +57,9 @@ class Authors extends Rest
         if ( !Validate::checkName($this->params['name']) )
             $this->response( '', 406, '036', true );
 
+        if ( $this->checkAuthorsName($this->params['name']) )
+            $this->response( '', 406, '039', true );
+
         $arrParams['id'] = $this->params['id'];
         $arrParams['authorsName'] = $this->params['name'];
     
@@ -71,50 +77,32 @@ class Authors extends Rest
     /**
      * Removing an author from a table.
      * /hash(admin)/id(author) - input.
+     * Put 0 id (empty) in the binding table.
      * Return 200 or 400+.
      */
     protected function deleteAuthors()
     {
-        list($arrParams['hash'],
-             $arrParams['id']
-        ) = explode('/', $this->params['params'], 3);
+        list($hash, $authorId) = explode('/', $this->params['params'], 3);
 
-        if ( !$id = $this->getUserIdByHash($arrParams['id_user']) )
-            $this->response( '', 404, '024', true );
-            
-        if ( !Validate::onlyNumbers($arrParams['id_book']) )
-            $this->response( '', 406, '026', true );
-
-        if ( !$this->checkBookInCart($id[0]['id'], $arrParams['id_book']) )
-            $this->response( '', 404, '025', true );
+        if ( !$this->checkAdminRights($hash) )
+            $this->response( '', 406, '033', true );
+    
+        if ( !$this->checkAuthorsId($authorId) )
+            $this->response( '', 404, '037', true );
         
-        $arrParams['id_user'] = $id[0]['id'];
-        $sql = 'DELETE FROM bookshop_cart
-                WHERE id_user = :id_user
-                AND id_book = :id_book';
-        $result = $this->db->execute($sql, $arrParams);
+        $sql = 'UPDATE bookshop_books_to_authors
+                SET id_author = 0
+                WHERE id_author = :id';
+        $this->db->execute($sql, ['id' => $authorId]);
+        
+        $sql = 'DELETE FROM bookshop_authors
+                WHERE id = :id';
+        $result = $this->db->execute($sql, ['id' => $authorId]);
         
         if (!$result)
             $this->response( '', 404, '002', true );
 
         $this->response();
-    }
-
-    /** 
-     * Check book id in user cart.
-     * Return bool
-     */
-    protected function checkBookInCart($userId, $bookId)
-    {
-        $sql = 'SELECT id_book FROM bookshop_cart
-                WHERE id_user = :id_user
-                AND id_book = :id_book';
-        $result = $this->db->execute($sql, ['id_book' => $bookId, 'id_user'=> $userId]);
-        
-        if (!$result)
-            return FALSE;
-
-        return TRUE;
     }
 
     /** 
@@ -125,6 +113,21 @@ class Authors extends Rest
     {
         $sql = 'SELECT id FROM bookshop_authors WHERE id = :id';
         $result = $this->db->execute($sql, ['id' => $id]);
+        
+        if (!$result)
+            return FALSE;
+
+        return TRUE;
+    }
+
+    /** 
+     * Check name in the table authors
+     * Return bool
+     */
+    protected function checkAuthorsName($name)
+    {
+        $sql = 'SELECT authorsName FROM bookshop_authors WHERE authorsName = :authorsName';
+        $result = $this->db->execute($sql, ['authorsName' => $name]);
         
         if (!$result)
             return FALSE;

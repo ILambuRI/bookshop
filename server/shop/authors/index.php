@@ -13,8 +13,9 @@ class Authors extends Rest
     }
     
     /**
-     * Get the whole table of authors
-     * Return array grouped by id
+     * Get the whole table of authors.
+     * Delete 0 ID (Empty) from the result.
+     * Return array grouped by id.
      */
     protected function getAuthors()
     {
@@ -28,17 +29,21 @@ class Authors extends Rest
         if (!$result)
             $this->response( '', 404, '002', true );
 
+        array_splice($result, 0, 1);
+
         $this->response($result);
     }
     
     /**
      * Get full information about the author by id.
      * /id - input.
-     * Return array
+     * Return array.
      */
     protected function getAuthorsByParams()
     {
         $id = $this->params['params'];
+        if ($id == '0')
+            $this->response( '', 404, '002', true );
         
         $sql = 'SELECT bookshop_authors.id,
                        bookshop_authors.authorsName

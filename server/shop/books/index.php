@@ -44,7 +44,8 @@ class Books extends Rest
         if (!$result)
             $this->response( '', 404, '002', true );
 
-        $this->response($result);
+        $books = $this->formingBooks($result);
+        $this->response($books);
     }
     
     /**
@@ -83,7 +84,43 @@ class Books extends Rest
         if (!$result)
             $this->response( '', 404, '002', true );
 
-        $this->response($result);
+        $books = $this->formingBooks($result);
+        $this->response($books);
+    }
+
+    protected function formingBooks($result)
+    {
+        $books = [];
+        foreach ($result as $value)
+        {
+            if ( isset($books[$value['id']]) )
+            {
+                $regAuthor = preg_match('/' .$value['authorsName']. '/', $books[$value['id']]['authorsName']);
+                if ( ($books[$value['id']]['authorsName'] != $value['authorsName']) && !$regAuthor )
+                    $books[$value['id']]['authorsName'] .= ', ' . $value['authorsName'];
+
+                $regGenre = preg_match('/' .$value['genresName']. '/', $books[$value['id']]['genresName']);
+                if ( $books[$value['id']]['genresName'] != $value['genresName'] && !$regGenre )
+                    $books[$value['id']]['genresName'] .= ', ' . $value['genresName'];
+            }
+            else
+            {
+                $books[$value['id']] = [
+                    'id' => $value['id'],
+                    'booksName' => $value['booksName'],
+                    'authorsName' => $value['authorsName'],
+                    'genresName' => $value['genresName'],
+                    'description' => $value['description'],
+                    'pubyear' => $value['pubyear'],
+                    'discountsName' => $value['discountsName'],
+                    'percent' => $value['percent'],
+                    'price' => $value['price']
+                ];
+            }
+        }
+
+        $books = array_values($books);
+        return $books;
     }
 }
 
