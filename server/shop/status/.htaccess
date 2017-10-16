@@ -1,10 +1,10 @@
 RewriteEngine On
 
 # WORK #
-#RewriteBase /~user10/MYPHP/bookshop/server/admin/books
+#RewriteBase /~user10/MYPHP/bookshop/server/shop/status
 
 # HOME #
-#RewriteBase /server/admin/books
+#RewriteBase /server/shop/status/
 
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d

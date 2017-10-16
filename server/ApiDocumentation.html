@@ -34,14 +34,24 @@
         Get all the books from the table
     </p>
     <p>
-        [GET] bookshop/client/api/shop/books/(id) <br>
-        Get full information about the book by id
+        [GET] bookshop/client/api/shop/books/id(books)/id(authors)/id(genres) <br>
+        Get full information about the books where: <br>
+        /id(books). <br>
+        /false(null)/id(authors). <br>
+        /false(null)/false(null)/id(genres). <br>
+        Return array.
     </p>
 
     <p><strong>payment:</strong></p>
     <p>
         [GET] bookshop/client/api/shop/payment/ <br>
-        Get all the payments from the table. (grouping by id)
+        Get all payments from the table. (grouping by id)
+    </p>
+
+    <p><strong>status:</strong></p>
+    <p>
+        [GET] bookshop/client/api/shop/status/ <br>
+        Get all status from the table. (grouping by id)
     </p>
     <br><br>
 
@@ -151,6 +161,7 @@
         /hash(admin)/id(genre) - input. <br>
         Return 200 or 400+.
     </p>
+
     <p><strong>orders:</strong></p>
     <p>
         [GET] bookshop/client/api/admin/orders/ <br>
@@ -162,6 +173,42 @@
         [PUT] bookshop/client/api/admin/orders/ <br>
         Set a new status for the order. <br>
         hash(admin) | idOrder | idStatus - input. <br>
+        Return 200 or 400+.
+    </p>
+
+    <p><strong>users:</strong></p>
+    <p>
+        [GET] bookshop/client/api/admin/users/(hash)/(id) <br>
+        /hash(admin) - get all users. <br>
+        /hash(admin)/id(user) - get the user by ID. <br>
+        Return array or 400+.
+    </p>
+    <p>
+        [POST] bookshop/client/api/admin/users/ <br>
+        Write a new user in table. <br>
+        hash(admin) | login | password | phone | idDiscount | admin(1 or 0) | active(1 or 0)- input. <br>
+        Return 200 or 400+.
+    </p>
+    <p>
+        [PUT] bookshop/client/api/admin/users/ <br>
+        Update user data. <br>
+        hash(admin) | id(users) | login | password | phone | idDiscount | admin(1 or 0) | active(1 or 0)- input. <br>
+        Return 200 or 400+.
+    </p>
+
+    <p><strong>books:</strong></p>
+    <p>
+        [POST] bookshop/client/api/admin/books/ <br>
+        Adding a new book to the table. <br>
+        hash(admin) | name(books) | description | pubyear(int) | price(int) | idDiscount <br>
+        authorsId(1,2,3 etc.) | genresId(1,2,3 etc.) - input. <br>
+        Return id(new book) or 400+.
+    </p>
+    <p>
+        [PUT] bookshop/client/api/admin/books/ <br>
+        Update book in the table. <br>
+        hash(admin) | id(book) | name(books) | description | pubyear(int) | price(int) | idDiscount <br>
+        authorsId(1,2,3 etc.) | genresId(1,2,3 etc.) - input. <br>
         Return 200 or 400+.
     </p>
     </body>

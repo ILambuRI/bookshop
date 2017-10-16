@@ -30,13 +30,31 @@ class Validate
 	}
 
 	/**
-	 * Сleaning the array from white space
+	 * Clears input data (trim, strip_tags, stripslashes and whitespace > 1)
+	 * @return string
+	 */
+	static function clearText($data)
+	{
+		if (get_magic_quotes_gpc())
+			$data = trim(stripslashes($data));
+		
+		$data = strip_tags($data);
+		$data = preg_replace( '/\s{2,}/', ' ', trim($data) );
+
+		if (strlen($data) < 3)
+			return FALSE;
+
+		return $data;
+	}
+
+	/**
+	 * Сleaning the array from white space > 2
 	 * @return array
 	 */
 	static function trimArrayData($data)
 	{
 		foreach ($data as $key => $value)
-			$data[$key] = trim($value);
+			$data[$key] = preg_replace( '/\s{2,}/', ' ', trim($value) );
 
 		return $data;
 	}

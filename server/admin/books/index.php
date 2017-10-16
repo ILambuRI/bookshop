@@ -5,7 +5,7 @@ require_once("../Db.php");
 use services\Validate;
 use services\Convert;
 
-class Cart extends Rest
+class Books extends Rest
 {
     /**Database object (PDO)*/
     private $db;
@@ -14,144 +14,196 @@ class Cart extends Rest
     {
         $this->db = new Db();
     }
+
+    /**
+     * Adding a new book to the table.
+     * hash(admin) | name(books) | description | pubyear(int) | price(int) | idDiscount
+     * authorsId(1,2,3 etc.) | genresId(1,2,3 etc.) - input.
+     * Return id(new book) or 400+.
+     */
+    protected function postBooks()
+    {
+        if ( !$this->checkAdminRights($this->params['hash']) )
+            $this->response( '', 406, '033', true );
+        
+        if ( !$this->checkDiscountId($this->params['idDiscount']) )
+            $this->response( '', 404, '064', true );
+
+        if ( !Validate::onlyNumbers($this->params['pubyear']) )
+            $this->response( '', 406, '065', true );
+
+        if ( !Validate::onlyNumbers($this->params['price']) )
+            $this->response( '', 406, '066', true );
+
+        if ( !$this->params['name'] = Validate::clearText($this->params['name']) )
+            $this->response( '', 406, '067', true );
+
+        if( !$this->params['description'] = Validate::clearText($this->params['description']) )
+            $this->response( '', 406, '068', true );
+
+        $authorsId = explode(',', $this->params['authorsId']);
+        foreach ($authorsId as $id)
+        {
+            if ( !$this->checkAuthorsId($id) )
+                $this->response( '', 404, '069', true );
+
+            $authorsIdParams[] = ['id' => $id];
+        }
     
-    /**
-     * /hash - getting all the books from the cart by user hash.
-     * Return array.
-     */
-    protected function getCartByParams()
-    {
-        if ( !$id = $this->getUserIdByHash($this->params['params']) )
-            $this->response( '', 404, '015', true );
+        $genresId = explode(',', $this->params['genresId']);
+        foreach ($genresId as $id)
+        {
+            if ( !$this->checkGenresId($id) )
+                $this->response( '', 404, '070', true );
+
+            $genresIdParams[] = ['id' => $id];                
+        }
+
+        unset($this->params['hash'],
+              $this->params['authorsId'],
+              $this->params['genresId'],
+              $authorsId,
+              $genresId              
+        );
         
-        $sql = 'SELECT bookshop_books.booksName,
-                       bookshop_cart.count,
-                       bookshop_books.price,
-                       bookshop_discounts.percent
-                FROM bookshop_cart
-                    INNER JOIN bookshop_books
-                        ON bookshop_cart.id_book = bookshop_books.id
-                    INNER JOIN bookshop_discounts
-                        ON bookshop_books.id_discount = bookshop_discounts.id
-                WHERE bookshop_cart.id_user = :id';
-        $result = $this->db->execute($sql, ['id' => $id[0]['id']]);
+        $sql = 'INSERT INTO bookshop_books (booksName, description, pubyear, price, id_discount)
+                VALUES (:name, :description, :pubyear, :price, :idDiscount)';
+        $result = $this->db->execute($sql, $this->params);
         
         if (!$result)
             $this->response( '', 404, '002', true );
-
-        $this->response($result);
-    }
-
-    /**
-     * Adding a book to the cart.
-     * hash | id(books) | count - input.
-     * Return 200 or 400+.
-     */
-    protected function postCart()
-    {
-        if ( !$id = $this->getUserIdByHash($this->params['hash']) )
-            $this->response( '', 404, '016', true );
-
-        if ( !$this->checkBookId($this->params['id']) )
-            $this->response( '', 404, '017', true );
-            
-        if ( !Validate::onlyNumbers($this->params['count']) )
-            $this->response( '', 406, '018', true );
         
-        if ( $this->checkBookInCart($id[0]['id'], $this->params['id']) )
-            $this->response( '', 406, '019', true );
-            
-        $arrParams['id_user'] = $id[0]['id'];
-        $arrParams['id_book'] = $this->params['id'];
-        $arrParams['count'] = $this->params['count'];
+        /* Get the ID of the inserted book */
+        $bookId = $this->db->dbh->lastInsertId();
 
-        $sql = 'INSERT INTO bookshop_cart (id_user, id_book, count)
-                VALUES (:id_user, :id_book, :count)';
-        $result = $this->db->execute($sql, $arrParams);
+        // foreach ($authorsId as $id)
+        // {
+        //     $sql = 'INSERT INTO bookshop_books_to_authors (id_book, id_author)
+        //             VALUES (' .$bookId. ', ' .$id. ')';
+        //     $this->db->execute($sql);
+        // }
 
+        // foreach ($genresId as $id)
+        // {
+        //     $sql = 'INSERT INTO bookshop_books_to_genres (id_book, id_genre)
+        //             VALUES (' .$bookId. ', ' .$id. ')';
+        //     $this->db->execute($sql);
+        // }
+
+        $sql = 'INSERT INTO bookshop_books_to_authors (id_book, id_author)
+                VALUES (' .$bookId. ', :id)';
+        $result = $this->db->execTransaction($sql, $authorsIdParams);
+        
         if (!$result)
-            $this->response( '', 404, '002', true );
-
-        $this->response();
-    }
-
-    /**
-     * Changing the number of books in the cart.
-     * hash | id(books) | count - input.
-     * Return 200 or 400+.
-     */
-    protected function putCart()
-    {
-        if ( !$id = $this->getUserIdByHash($this->params['hash']) )
-            $this->response( '', 404, '020', true );
-            
-        if ( !Validate::onlyNumbers($this->params['id']) )
-            $this->response( '', 406, '021', true );
-            
-        if ( !Validate::onlyNumbers($this->params['count']) )
-            $this->response( '', 406, '022', true );
-        
-        if ( !$this->checkBookInCart($id[0]['id'], $this->params['id']) )
-            $this->response( '', 404, '023', true );
-            
-        $arrParams['id_user'] = $id[0]['id'];
-        $arrParams['id_book'] = $this->params['id'];
-        $arrParams['count'] = $this->params['count'];
+            $this->response( '', 404, '071', true );
     
-        $sql = 'UPDATE bookshop_cart
-                SET count = :count
-                WHERE id_user = :id_user
-                AND id_book = :id_book';
-        $result = $this->db->execute($sql, $arrParams);
+        $sql = 'INSERT INTO bookshop_books_to_genres (id_book, id_genre)
+                VALUES (' .$bookId. ', :id)';
+        $result = $this->db->execTransaction($sql, $genresIdParams);
 
         if (!$result)
-            $this->response( '', 404, '002', true );
-
-        $this->response();
+            $this->response( '', 404, '072', true );
+        
+        $this->response( [$bookId] );
     }
 
+
     /**
-     * Removing a book from a cart.
-     * /hash/id(books) - input.
+     * Update book in the table.
+     * hash(admin) | id(book) | name(books) | description | pubyear(int) | price(int) | idDiscount
+     * authorsId(1,2,3 etc.) | genresId(1,2,3 etc.) - input.
      * Return 200 or 400+.
      */
-    protected function deleteCart()
+    protected function putBooks()
     {
-        list($arrParams['id_user'],
-             $arrParams['id_book']
-        ) = explode('/', $this->params['params'], 3);
-
-        if ( !$id = $this->getUserIdByHash($arrParams['id_user']) )
-            $this->response( '', 404, '024', true );
-            
-        if ( !Validate::onlyNumbers($arrParams['id_book']) )
-            $this->response( '', 406, '026', true );
-
-        if ( !$this->checkBookInCart($id[0]['id'], $arrParams['id_book']) )
-            $this->response( '', 404, '025', true );
+        if ( !$this->checkAdminRights($this->params['hash']) )
+            $this->response( '', 406, '033', true );
         
-        $arrParams['id_user'] = $id[0]['id'];
-        $sql = 'DELETE FROM bookshop_cart
-                WHERE id_user = :id_user
-                AND id_book = :id_book';
-        $result = $this->db->execute($sql, $arrParams);
+        if ( !$this->checkBooksId($this->params['id']) )
+            $this->response( '', 404, '064', true );
+
+        if ( !$this->checkDiscountId($this->params['idDiscount']) )
+            $this->response( '', 404, '064', true );
+
+        if ( !Validate::onlyNumbers($this->params['pubyear']) )
+            $this->response( '', 406, '065', true );
+
+        if ( !Validate::onlyNumbers($this->params['price']) )
+            $this->response( '', 406, '066', true );
+
+        if ( !$this->params['name'] = Validate::clearText($this->params['name']) )
+            $this->response( '', 406, '067', true );
+
+        if( !$this->params['description'] = Validate::clearText($this->params['description']) )
+            $this->response( '', 406, '068', true );
+
+        $authorsId = explode(',', $this->params['authorsId']);
+        foreach ($authorsId as $id)
+        {
+            if ( !$this->checkAuthorsId($id) )
+                $this->response( '', 404, '069', true );
+
+            $authorsIdParams[] = ['id' => $id];
+        }
+    
+        $genresId = explode(',', $this->params['genresId']);
+        foreach ($genresId as $id)
+        {
+            if ( !$this->checkGenresId($id) )
+                $this->response( '', 404, '070', true );
+                
+            $genresIdParams[] = ['id' => $id];                
+        }
+
+        unset($this->params['hash'],
+              $this->params['authorsId'],
+              $this->params['genresId'],
+              $authorsId,
+              $genresId              
+        );
+        
+        $sql = 'UPDATE bookshop_books
+                SET booksName = :name,
+                    description = :description,
+                    pubyear = :pubyear,
+                    price = :price,
+                    id_discount = :idDiscount
+                WHERE id = :id';
+        $result = $this->db->execute($sql, $this->params);
+        
+        $sql = 'DELETE FROM bookshop_books_to_authors
+                WHERE id_book = ' . $this->params['id'];
+        $result = $this->db->execute($sql);
+
+        $sql = 'DELETE FROM bookshop_books_to_genres
+                WHERE id_book = ' . $this->params['id'];
+        $result = $this->db->execute($sql);
+
+        $sql = 'INSERT INTO bookshop_books_to_authors (id_book, id_author)
+                VALUES (' .$this->params['id']. ', :id)';
+        $result = $this->db->execTransaction($sql, $authorsIdParams);
         
         if (!$result)
-            $this->response( '', 404, '002', true );
+            $this->response( '', 404, '071', true );
+    
+        $sql = 'INSERT INTO bookshop_books_to_genres (id_book, id_genre)
+                VALUES (' .$this->params['id']. ', :id)';
+        $result = $this->db->execTransaction($sql, $genresIdParams);
 
+        if (!$result)
+            $this->response( '', 404, '072', true );
+        
         $this->response();
     }
 
     /** 
-     * Check book id in user cart.
-     * Return bool
+     * Check id in the table discounts.
+     * Return bool.
      */
-    protected function checkBookInCart($userId, $bookId)
+    protected function checkDiscountId($id)
     {
-        $sql = 'SELECT id_book FROM bookshop_cart
-                WHERE id_user = :id_user
-                AND id_book = :id_book';
-        $result = $this->db->execute($sql, ['id_book' => $bookId, 'id_user'=> $userId]);
+        $sql = 'SELECT id FROM bookshop_discounts WHERE id = :id';
+        $result = $this->db->execute($sql, ['id' => $id]);
         
         if (!$result)
             return FALSE;
@@ -163,7 +215,7 @@ class Cart extends Rest
      * Check id in the table books
      * Return bool
      */
-    protected function checkBookId($id)
+    protected function checkBooksId($id)
     {
         $sql = 'SELECT id FROM bookshop_books WHERE id = :id';
         $result = $this->db->execute($sql, ['id' => $id]);
@@ -175,25 +227,55 @@ class Cart extends Rest
     }
 
     /** 
-     * Get user id from the table users by hash
-     * Return id or false
+     * Check id in the table genres
+     * Return bool
      */
-    protected function getUserIdByHash($hash)
+    protected function checkGenresId($id)
     {
-        $sql = 'SELECT id FROM bookshop_users WHERE hash = :hash';
-        $result = $this->db->execute($sql, ['hash' => $hash]);
-
+        $sql = 'SELECT id FROM bookshop_genres WHERE id = :id';
+        $result = $this->db->execute($sql, ['id' => $id]);
+        
         if (!$result)
             return FALSE;
 
-        return $result;
+        return TRUE;
+    }
+    
+    /** 
+     * Check id in the table authors
+     * Return bool
+     */
+    protected function checkAuthorsId($id)
+    {
+        $sql = 'SELECT id FROM bookshop_authors WHERE id = :id';
+        $result = $this->db->execute($sql, ['id' => $id]);
+        
+        if (!$result)
+            return FALSE;
+
+        return TRUE;
+    }
+    
+    /** 
+     * Checking user access by hash.
+     * Return bool.
+     */
+    protected function checkAdminRights($hash)
+    {
+        $sql = 'SELECT admin FROM bookshop_users WHERE hash = :hash';
+        $result = $this->db->execute($sql, ['hash' => $hash]);
+
+        if (!$result or $result[0]['admin'] == 0)
+            return FALSE;
+
+        return TRUE;
     }
 }
 
 try
 {
-    $api = new Cart;
-    $api->table = 'cart';
+    $api = new Books;
+    $api->table = 'books';
     $api->play();
 }
 catch (Exception $e)

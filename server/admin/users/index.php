@@ -16,134 +16,139 @@ class Users extends Rest
     }
     
     /**
-     * /null(or false)/hash - check hash in table or hash lifetime.
-     * /login - check if there is a login in the table.
-     * Return 200 or 400+.
+     * /hash(admin) - get all users.
+     * /hash(admin)/id(user) - get the user by ID.
+     * Return array or 400+.
      */
     protected function getUsersByParams()
     {
-        list($arrParams['login'],
-             $arrParams['hash']
+        list($arrParams['hash'],
+             $arrParams['id']
         ) = explode('/', $this->params['params'], 3);
+
+        if ( !$this->checkAdminRights($arrParams['hash']) )
+            $this->response( '', 406, '033', true );
+
+        $sql = 'SELECT bookshop_users.id,
+                       bookshop_users.login,
+                       bookshop_users.password,
+                       bookshop_users.phone,
+                       bookshop_discounts.percent,
+                       bookshop_users.admin,
+                       bookshop_users.active
+                FROM bookshop_users
+                    INNER JOIN bookshop_discounts
+                    ON bookshop_users.id_discount = bookshop_discounts.id';
+
+        if ($arrParams['id'])
+        {
+            if ( !$this->checkUsersId($arrParams['id']) )
+                $this->response( '', 404, '048', true );
+
+            $sql .= ' WHERE bookshop_users.id = :id';
+            $result = $this->db->execute($sql, ['id' => $arrParams['id']]);
+        }
+        else
+            $result = $this->db->execute($sql);
         
-        if ( ($arrParams['login'] != 'false' && $arrParams['login'] != 'null')
-             &&
-             ($arrParams['hash'] == 'false' || $arrParams['hash'] == 'null' ||  $arrParams['hash'] == null) )
-        {
-            if ( !Validate::checkLogin($arrParams['login']) )
-                $this->response( '', 406, '012', true );
+        if (!$result)
+            $this->response( '', 404, '002', true );
 
-            $sql = 'SELECT login FROM bookshop_users WHERE login = :login';
-            $result = $this->db->execute($sql, ['login' => $arrParams['login']]);
-            
-            if (!$result)
-                $this->response( '', 404, '002', true );
-
-            $this->response();
-        }
-
-        if ( ($arrParams['hash'] != 'false' && $arrParams['hash'] != 'null')
-             &&
-             ($arrParams['login'] == 'false' || $arrParams['login'] == 'null' ||  $arrParams['login'] == null) )
-        {
-            $sql = 'SELECT lifetime FROM bookshop_users WHERE hash = :hash';
-            $result = $this->db->execute($sql, ['hash' => $arrParams['hash']]);
-            
-            if (!$result)
-                $this->response( '', 404, '002', true );
-            
-            if ( ((int)$result[0]['lifetime'] + HASH_LIFETIME) < time() )
-                $this->response( '', 404, '013', true );
-
-            $this->response();
-        }
-
-        $this->response( '', 404, '014', true );        
+        $this->response($result);
     }
 
     /**
-     * Registration - write a new user in table.
-     * login | password | phone - input.
-     * Return hash.
+     * Write a new user in table.
+     * hash(admin) | login | password | phone | idDiscount | admin(1 or 0) | active(1 or 0)- input.
+     * Return 200 or 400+.
      */
     protected function postUsers()
     {
+        if ( !$this->checkAdminRights($this->params['hash']) )
+            $this->response( '', 406, '033', true );
+
         if ( !Validate::checkLogin($this->params['login']) )
-            $this->response( '', 406, '003', true );
+            $this->response( '', 406, '049', true );
 
         if ( !Validate::checkPassword($this->params['password']) )
-            $this->response( '', 406, '005', true );
+            $this->response( '', 406, '050', true );
 
         if ( !Validate::checkPhone($this->params['phone']) )
-            $this->response( '', 406, '006', true );
+            $this->response( '', 406, '051', true );
 
         if ( $this->checkLogin($this->params['login']) )
-            $this->response( '', 406, '004', true );
+            $this->response( '', 406, '052', true );
 
+        if ( !$this->checkDiscountId($this->params['idDiscount']) )
+            $this->response( '', 404, '053', true );
+        
+        if ((int)$this->params['admin'] != 1 && (int)$this->params['admin'] != 0)
+            $this->response( '', 406, '054', true );
+        
+        if ((int)$this->params['active'] != 1 && (int)$this->params['active'] != 0)
+            $this->response( '', 406, '055', true );
+        
         $this->params['password'] = Convert::toMd5($this->params['password']);
         $this->params['hash'] = Convert::toMd5( $this->params['login'] . rand(12345, PHP_INT_MAX) );
         $this->params['lifetime'] = time();
 
-        $sql = 'INSERT INTO bookshop_users (login, password, phone, id_discount, hash, lifetime)
-                VALUES (:login, :password, :phone, 1, :hash, :lifetime)';
+        $sql = 'INSERT INTO bookshop_users (login, password, phone, id_discount, hash, lifetime, admin, active)
+                VALUES (:login, :password, :phone, :idDiscount, :hash, :lifetime, :admin, :active)';
         $result = $this->db->execute($sql, $this->params);
 
         if (!$result)
             $this->response( '', 404, '002', true );
 
-        $this->response([ ['hash' => $this->params['hash']] ]);
+        $this->response();
     }
 
     /**
-     * Login - user authorization, if it is in the table,
-     * we write a new hash and lifetime.
-     * login | password - input
-     * Return new hash.
+     * Update user data.
+     * hash(admin) | id(users) | login | password | phone | idDiscount | admin(1 or 0) | active(1 or 0)- input.
+     * Return 200 or 400+.
      */
     protected function putUsers()
     {
+        if ( !$this->checkAdminRights($this->params['hash']) )
+            $this->response( '', 406, '033', true );
+
+        if ( !$this->checkUsersId($this->params['id']) )
+            $this->response( '', 404, '056', true );
+
         if ( !Validate::checkLogin($this->params['login']) )
-            $this->response( '', 406, '007', true );
+            $this->response( '', 406, '057', true );
 
         if ( !Validate::checkPassword($this->params['password']) )
-            $this->response( '', 406, '008', true );
+            $this->response( '', 406, '058', true );
+
+        if ( !Validate::checkPhone($this->params['phone']) )
+            $this->response( '', 406, '059', true );
+
+        if ( !$this->checkDiscountId($this->params['idDiscount']) )
+            $this->response( '', 404, '060', true );
+        
+        if ((int)$this->params['admin'] != 1 && (int)$this->params['admin'] != 0)
+            $this->response( '', 406, '061', true );
+        
+        if ((int)$this->params['active'] != 1 && (int)$this->params['active'] != 0)
+            $this->response( '', 406, '062', true );
         
         $this->params['password'] = Convert::toMd5($this->params['password']);
-        
-        if ( !$this->checkLogin($this->params['login']) )
-            $this->response( '', 406, '009', true );
+        $this->params['hash'] = Convert::toMd5( $this->params['login'] . rand(12345, PHP_INT_MAX) );
+        $this->params['lifetime'] = time();
 
-        if ( !$this->checkPassword($this->params['login'], $this->params['password']) )
-            $this->response( '', 406, '010', true );
-            
-        $arrParams['login'] = $this->params['login'];
-        $arrParams['hash'] = Convert::toMd5( $this->params['login'] . rand(12345, PHP_INT_MAX) );
-        $arrParams['lifetime'] = time();
-        
-        $sql = 'UPDATE bookshop_users SET hash = :hash, lifetime = :lifetime
-                WHERE login = :login';
-        $result = $this->db->execute($sql, $arrParams);
+        $sql = 'UPDATE bookshop_users
+                SET login = :login,
+                    password = :password,
+                    phone = :phone,
+                    hash = :hash,
+                    lifetime = :lifetime,
+                    admin = :admin,
+                    active = :active,
+                    id_discount = :idDiscount
+                WHERE id = :id';
+        $result = $this->db->execute($sql, $this->params);
 
-        if (!$result)
-            $this->response( '', 404, '002', true );
-
-        $this->response( [ ['hash' => $arrParams['hash']] ] );
-    }
-
-    /**
-     * Logout - removing (updating) a hash in tables.
-     * /hash - input
-     * Return 200 or 400+.
-     */
-    protected function deleteUsers()
-    {
-        if ( !$this->checkHash($this->params['params']) )
-            $this->response( '', 404, '011', true );
-
-        $newHash = Convert::toMd5( rand(12345, PHP_INT_MAX) );        
-        $sql = 'UPDATE bookshop_users SET hash = "' .$newHash. '" WHERE hash = :hash';
-        $result = $this->db->execute($sql, ['hash' => $this->params['params']]);
-        
         if (!$result)
             $this->response( '', 404, '002', true );
 
@@ -151,8 +156,53 @@ class Users extends Rest
     }
 
     /** 
-     * Check login in the table
-     * Return bool
+     * Checking user access by hash.
+     * Return bool.
+     */
+    protected function checkAdminRights($hash)
+    {
+        $sql = 'SELECT admin FROM bookshop_users WHERE hash = :hash';
+        $result = $this->db->execute($sql, ['hash' => $hash]);
+
+        if (!$result or $result[0]['admin'] == 0)
+            return FALSE;
+
+        return TRUE;
+    }
+
+    /** 
+     * Check id in the table users.
+     * Return bool.
+     */
+    protected function checkUsersId($id)
+    {
+        $sql = 'SELECT id FROM bookshop_users WHERE id = :id';
+        $result = $this->db->execute($sql, ['id' => $id]);
+        
+        if (!$result)
+            return FALSE;
+
+        return TRUE;
+    }
+
+    /** 
+     * Check id in the table discounts.
+     * Return bool.
+     */
+    protected function checkDiscountId($id)
+    {
+        $sql = 'SELECT id FROM bookshop_discounts WHERE id = :id';
+        $result = $this->db->execute($sql, ['id' => $id]);
+        
+        if (!$result)
+            return FALSE;
+
+        return TRUE;
+    }
+
+    /** 
+     * Check login in the table users.
+     * Return bool.
      */
     protected function checkLogin($login)
     {
@@ -163,51 +213,6 @@ class Users extends Rest
             return FALSE;
 
         return TRUE;
-    }
-
-    /** 
-     * Check password in the table
-     * Return bool
-     */
-    protected function checkPassword($login, $password)
-    {
-        $sql = 'SELECT password FROM bookshop_users WHERE login = :login AND password = :password';
-        $result = $this->db->execute($sql, ['login' => $login, 'password' => $password]);
-        
-        if (!$result)
-            return FALSE;
-
-        return TRUE;
-    }
-
-    /** 
-     * Check hash in the table
-     * Return bool
-     */
-    protected function checkHash($hash)
-    {
-        $sql = 'SELECT hash FROM bookshop_users WHERE hash = :hash';
-        $result = $this->db->execute($sql, ['hash' => $hash]);
-        
-        if (!$result)
-            return FALSE;
-
-        return TRUE;
-    }
-
-    /** 
-     * Get lifetime from the table by login
-     * Return time or false
-     */
-    protected function getTime($login)
-    {
-        $sql = 'SELECT lifetime FROM bookshop_users WHERE login = :login';
-        $result = $this->db->execute($sql, ['login' => $login]);
-        
-        if (!$result)
-            return FALSE;
-
-        return $result;
     }
 }
 
