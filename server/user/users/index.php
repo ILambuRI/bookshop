@@ -16,8 +16,8 @@ class Users extends Rest
     }
     
     /**
-     * /null(or false)/hash - check hash in table or hash lifetime.
      * /login - check if there is a login in the table.
+     * /null(or false)/hash - check hash in table or hash lifetime.
      * Return 200 or 400+.
      */
     protected function getUsersByParams()
@@ -26,7 +26,7 @@ class Users extends Rest
              $arrParams['hash']
         ) = explode('/', $this->params['params'], 3);
         
-        if ( ($arrParams['login'] != 'false' && $arrParams['login'] != 'null')
+        if ( ($arrParams['login'] != 'false' && $arrParams['login'] != 'null' && $arrParams['login'] != null)
              &&
              ($arrParams['hash'] == 'false' || $arrParams['hash'] == 'null' ||  $arrParams['hash'] == null) )
         {
@@ -42,7 +42,7 @@ class Users extends Rest
             $this->response();
         }
 
-        if ( ($arrParams['hash'] != 'false' && $arrParams['hash'] != 'null')
+        if ( ($arrParams['hash'] != 'false' && $arrParams['hash'] != 'null' && $arrParams['hash'] != null)
              &&
              ($arrParams['login'] == 'false' || $arrParams['login'] == 'null' ||  $arrParams['login'] == null) )
         {
@@ -126,8 +126,13 @@ class Users extends Rest
 
         if (!$result)
             $this->response( '', 404, '002', true );
+            
+        if ( $this->checkAdminRights($arrParams['hash']) )
+            $access = 1;
+        else
+            $access = 0;
 
-        $this->response( [ ['hash' => $arrParams['hash']] ] );
+        $this->response( ['hash' => $arrParams['hash'], 'admin' => $access] );
     }
 
     /**
@@ -190,6 +195,22 @@ class Users extends Rest
         $result = $this->db->execute($sql, ['hash' => $hash]);
         
         if (!$result)
+            return FALSE;
+
+        return TRUE;
+    }
+
+    
+    /** 
+     * Checking user access by hash.
+     * Return bool.
+     */
+    protected function checkAdminRights($hash)
+    {
+        $sql = 'SELECT admin FROM bookshop_users WHERE hash = :hash';
+        $result = $this->db->execute($sql, ['hash' => $hash]);
+
+        if (!$result or $result[0]['admin'] == 0)
             return FALSE;
 
         return TRUE;
