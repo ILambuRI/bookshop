@@ -27,8 +27,8 @@
           <form class="form-inline my-2 my-lg-0">
             <input v-model.trim="login" class="form-control mr-sm-1" type="text" placeholder="Login" aria-label="Login">
             <input v-model.trim="password" class="form-control mr-sm-1" type="password" placeholder="Password" aria-label="Password">
-            <button @click="auth()" type="button" class="btn btn-outline-dark my-2 my-sm-0" :disabled="validAccess">
-              Login
+            <button @click="logIn()" type="button" class="btn btn-outline-dark my-2 my-sm-0" :disabled="validAccess">
+              <i class="fa fa-sign-in" aria-hidden="true"></i>
             </button>
           </form>
         </div>
@@ -37,17 +37,19 @@
           <button type="button" class="btn btn-light mr-sm-1 my-sm-0 text-primary font-weight-bold">
             {{ user.login }}
           </button>
-          <button type="button" class="btn btn-outline-dark mr-sm-2 my-sm-0">
-            <i class="fa fa-cart-arrow-down" aria-hidden="true"></i>
-          </button>
-          <button @click="logout()" type="button" class="btn btn-outline-dark mr-sm-2 my-sm-0">
+          <router-link :to="'/cart'">
+            <button type="button" class="btn btn-outline-dark mr-sm-2 my-sm-0">
+              <i class="fa fa-shopping-cart" aria-hidden="true"></i>
+            </button>
+          </router-link>
+          <button @click="logOut()" type="button" class="btn btn-outline-dark mr-sm-2 my-sm-0">
             <i class="fa fa-sign-out" aria-hidden="true"></i>
           </button>
         </div>
       </div>
     </nav>
-    <!-- <img src="./assets/logo.png"> -->
-    <router-view :user="user"/>
+    <!-- User information is available for the whole application -->
+    <router-view :user="user" />
 
   </div>
 </template>
@@ -62,7 +64,14 @@ export default {
       URL: app.config.URL,
       login: '',
       password: '',
-      user: {access: false},
+      user: {
+        access: false,
+        cart: [], 
+        login: '',
+        hash: '',
+        percent: '',
+        admin: ''
+      },
     }
   },
 
@@ -110,7 +119,7 @@ export default {
       .then(this.json)
       .then((data) => {
         if (data.server.status == 200) {
-          console.log(data)
+          // console.log(data)
         }
         /* TODO modal window with error */
         else if (data.server.code == '013') {
@@ -120,15 +129,19 @@ export default {
           alert(error)
         }
         else {
-          let error = 'Status: ' + data.server.status + '\nError code: ' + data.server.code + '\nInfo: ' + data.server.information
+          let error = 'Error in checkAuth(hash)'+
+                      '\nStatus: ' + data.server.status +
+                      '\nError code: ' + data.server.code +
+                      '\nInfo: ' + data.server.information
           alert(error)
         }
       })
     },
 
-    logout() {
+    logOut() {
       localStorage.removeItem("user")
       this.user.access = false
+      this.user.cart = []
       fetch(this.URL + 'client/api/user/users/' + this.user.hash, {
         method: 'DELETE',
         headers: {  
@@ -141,13 +154,16 @@ export default {
         if (data.server.status == 200) {
         }
         else {
-          let error = 'Status: ' + data.server.status + '\nError code: ' + data.server.code + '\nInfo: ' + data.server.information
+          let error = 'Error in logOut()'+
+                      '\nStatus: ' + data.server.status +
+                      '\nError code: ' + data.server.code +
+                      '\nInfo: ' + data.server.information
           alert(error)
         }
       });
     },
 
-    auth() {
+    logIn() {
       fetch(this.URL + 'client/api/user/users/', {
         method: 'PUT',
         headers: {  
@@ -159,17 +175,44 @@ export default {
       .then(this.json)
       .then((data) => {
         if (data.server.status == 200) {
-          this.user.access = true
-          this.user.login = this.login
+          if (data.data.active == 1) {
+            this.user.access = true
+          }
+          this.user.login = data.data.login
           this.user.hash = data.data.hash
           this.user.admin = data.data.admin
+          this.user.percent = data.data.percent
+          this.getUserCartBooksId(this.user.hash)
           localStorage['user'] = JSON.stringify(this.user)
+          // console.log(this.user)
+          // this.user.cart = this.user.cart
         }
         else {
-          let error = 'Status: ' + data.server.status + '\nError code: ' + data.server.code + '\nInfo: ' + data.server.information
+          let error = 'Error in logIn()'+
+                      '\nStatus: ' + data.server.status +
+                      '\nError code: ' + data.server.code +
+                      '\nInfo: ' + data.server.information
           alert(error)
         }
-      });
+      })
+    },
+
+    getUserCartBooksId(hash) {
+      fetch(this.URL + 'client/api/user/cart/' + hash, {method: 'GET'})
+      .then(this.status)
+      .then(this.json)
+      .then((data) => {
+        if (data.server.status == 200) {
+          this.user.cart = []
+          data.data.forEach((element) => {
+            this.user.cart.push(element.id)
+          })
+
+          let user = JSON.parse(localStorage['user'])
+          user.cart = this.user.cart
+          localStorage['user'] = JSON.stringify(user)
+        }
+      })
     },
 
     cardEvent(type, id) {

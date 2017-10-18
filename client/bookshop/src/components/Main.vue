@@ -5,18 +5,33 @@
       <div class="col-2">
         <div class="list-group">
           <button @click="contentAllBooks()" class="list-group-item list-group-item-primary text-center">All Books</button>
-          <p class="list-group-item list-group-item-secondary text-center">Authors</p>
-          <button @click="contentByAuthor(author.id)" v-for="(author, key) in allAuthors" :key="key" class="list-group-item list-group-item-action list-group-item-light">
-            {{ author.authorsName }}
+
+          <button class="list-group-item list-group-item-secondary text-center" type="button" data-toggle="collapse" data-target="#collapseAuthors" aria-expanded="false" aria-controls="collapseAuthors">
+            Authors
           </button>
-          <p class="list-group-item list-group-item-secondary text-center">Genres</p>
-          <button @click="contentByGenre(genre.id)" v-for="(genre, key) in allGenres" :key="key" class="list-group-item list-group-item-action list-group-item-light">
-            {{ genre.genresName }}
+          <div class="collapse" id="collapseAuthors">
+            <button @click="contentByAuthor(author.id)" v-for="(author, key) in allAuthors" :key="key" class="list-group-item list-group-item-action list-group-item-light">
+              {{ author.authorsName }}
+            </button>
+          </div>
+
+          <button class="list-group-item list-group-item-secondary text-center" type="button" data-toggle="collapse" data-target="#collapseGenres" aria-expanded="false" aria-controls="collapseGenres">
+            Genres
           </button>
-          <p class="list-group-item list-group-item-secondary text-center">Books</p>
-          <button @click="contentByBook(book.id)" v-for="(book, key) in allBooks" :key="key" class="list-group-item list-group-item-action list-group-item-light">
-            {{ book.booksName }}
+          <div class="collapse" id="collapseGenres">
+            <button @click="contentByGenre(genre.id)" v-for="(genre, key) in allGenres" :key="key" class="list-group-item list-group-item-action list-group-item-light">
+              {{ genre.genresName }}
+            </button>
+          </div>
+
+          <button class="list-group-item list-group-item-secondary text-center" type="button" data-toggle="collapse" data-target="#collapseBooks" aria-expanded="false" aria-controls="collapseBooks">
+            Books
           </button>
+          <div class="collapse" id="collapseBooks">
+            <button @click="contentByBook(book.id)" v-for="(book, key) in allBooks" :key="key" class="list-group-item list-group-item-action list-group-item-light">
+              {{ book.booksName }}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -135,7 +150,7 @@ export default {
     },
 
     cardEvent(type, id) {
-      console.log(type, id)
+      // console.log(type, id)
       switch (type) {
         case 'byAuthor':
           this.contentByAuthor(id)

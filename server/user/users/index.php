@@ -127,12 +127,9 @@ class Users extends Rest
         if (!$result)
             $this->response( '', 404, '002', true );
             
-        if ( $this->checkAdminRights($arrParams['hash']) )
-            $access = 1;
-        else
-            $access = 0;
+        $userInfo = $this->getUserInfo($arrParams['hash']);
 
-        $this->response( ['hash' => $arrParams['hash'], 'admin' => $access] );
+        $this->response($userInfo);
     }
 
     /**
@@ -202,18 +199,23 @@ class Users extends Rest
 
     
     /** 
-     * Checking user access by hash.
-     * Return bool.
+     * Get user info.
+     * Return array.
      */
-    protected function checkAdminRights($hash)
+    protected function getUserInfo($hash)
     {
-        $sql = 'SELECT admin FROM bookshop_users WHERE hash = :hash';
+        $sql = 'SELECT bookshop_users.login,
+                       bookshop_discounts.percent,
+                       bookshop_users.hash,
+                       bookshop_users.admin,
+                       bookshop_users.active
+                FROM bookshop_users
+                    INNER JOIN bookshop_discounts
+                    ON bookshop_users.id_discount = bookshop_discounts.id 
+                WHERE hash = :hash';
         $result = $this->db->execute($sql, ['hash' => $hash]);
 
-        if (!$result or $result[0]['admin'] == 0)
-            return FALSE;
-
-        return TRUE;
+        return $result[0];
     }
 
     /** 

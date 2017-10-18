@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import Main from '@/components/Main'
+import MainPage from '@/components/Main'
+import UserCart from '@/components/Cart'
 
 Vue.use(Router)
 
@@ -8,8 +9,14 @@ export default new Router({
   routes: [
     {
       path: '/',
-      name: 'MainPage',
-      component: Main
+      name: 'Main page',
+      component: MainPage
+    },
+
+    {
+      path: '/cart',
+      name: 'User Cart',
+      component: UserCart
     }
   ]
 })

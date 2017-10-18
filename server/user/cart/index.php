@@ -24,7 +24,8 @@ class Cart extends Rest
         if ( !$id = $this->getUserIdByHash($this->params['params']) )
             $this->response( '', 404, '015', true );
         
-        $sql = 'SELECT bookshop_books.booksName,
+        $sql = 'SELECT bookshop_books.id,
+                       bookshop_books.booksName,
                        bookshop_cart.count,
                        bookshop_books.price,
                        bookshop_discounts.percent
