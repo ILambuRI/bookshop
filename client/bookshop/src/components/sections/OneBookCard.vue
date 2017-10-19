@@ -25,7 +25,7 @@
         <button @click="toCart()" class="btn btn-outline-dark" :disabled="!user.access">
           <i class="fa fa-cart-plus" aria-hidden="true" style="font-size: 30px;"></i>
         </button>
-        <button @click="count--" class="btn btn-dark" :disabled="btnMinusAccess">
+        <button @click="count--" class="btn btn-dark" :disabled="count <= 1">
           <i class="fa fa-minus" aria-hidden="true"></i>
         </button>
         <button type="button" class="btn btn-light font-weight-bold">{{ count }}</button>
@@ -77,12 +77,6 @@ export default {
 
       return true
     },
-
-    btnMinusAccess() {
-      if (this.count > 1) return false
-
-      return true
-    }
   },
 
   created() {
@@ -94,6 +88,7 @@ export default {
       user.cart.push(this.book.id)
       localStorage['user'] = JSON.stringify(user)
       this.user.cart.push(this.book.id)
+
       fetch(this.URL + 'client/api/user/cart/', {
         method: 'POST',
         headers: {  
@@ -115,7 +110,6 @@ export default {
           alert(error)
         }
       })
-
     },
 
     cardEvent(type, id) {

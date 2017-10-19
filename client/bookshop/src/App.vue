@@ -146,7 +146,7 @@ export default {
         method: 'DELETE',
         headers: {  
           "Content-type": "application/x-www-form-urlencoded; charset=UTF-8"  
-        },  
+        },
       })
       .then(this.status)
       .then(this.json)
@@ -161,6 +161,7 @@ export default {
           alert(error)
         }
       });
+      location.href = "/#/"
     },
 
     logIn() {
@@ -184,8 +185,6 @@ export default {
           this.user.percent = data.data.percent
           this.getUserCartBooksId(this.user.hash)
           localStorage['user'] = JSON.stringify(this.user)
-          // console.log(this.user)
-          // this.user.cart = this.user.cart
         }
         else {
           let error = 'Error in logIn()'+
