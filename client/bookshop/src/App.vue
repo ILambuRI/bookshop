@@ -10,33 +10,33 @@
       <div class="collapse navbar-collapse">
         <ul class="navbar-nav mr-auto">
           <li class="nav-item active">
-            <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">Link</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link disabled" href="#">Disabled</a>
+            <router-link :to="'/'">
+              <span class="nav-link">Home <span class="sr-only">(current)</span></span>
+            </router-link>
           </li>
         </ul>
 
         <div v-if="!user.access" class="row">
-          <button type="button" class="btn btn-light mr-sm-1 my-sm-0">
-            Registration
-          </button>
+          <router-link :to="'/registration'">
+            <button type="button" class="btn btn-light mr-sm-1 my-sm-0">
+              Registration
+            </button>
+          </router-link>
           <form class="form-inline my-2 my-lg-0">
             <input v-model.trim="login" class="form-control mr-sm-1" type="text" placeholder="Login" aria-label="Login">
             <input v-model.trim="password" class="form-control mr-sm-1" type="password" placeholder="Password" aria-label="Password">
-            <button @click="logIn()" type="button" class="btn btn-outline-dark my-2 my-sm-0" :disabled="validAccess">
+            <button @click="logIn()" type="button" class="btn btn-outline-dark mr-sm-2 my-sm-0" :disabled="validBtnAccess">
               <i class="fa fa-sign-in" aria-hidden="true"></i>
             </button>
           </form>
         </div>
 
         <div v-if="user.access" class="row">
-          <button type="button" class="btn btn-light mr-sm-1 my-sm-0 text-primary font-weight-bold">
-            {{ user.login }}
-          </button>
+          <router-link :to="'/orders'">
+            <button type="button" class="btn btn-light mr-sm-1 my-sm-0 text-primary font-weight-bold">
+              {{ user.login }}
+            </button>
+          </router-link>
           <router-link :to="'/cart'">
             <button type="button" class="btn btn-outline-dark mr-sm-2 my-sm-0">
               <i class="fa fa-shopping-cart" aria-hidden="true"></i>
@@ -76,7 +76,7 @@ export default {
   },
 
   computed: {
-    validAccess() {
+    validBtnAccess() {
       if (this.validLogin && this.validPassword) {
         return false
       }
@@ -97,7 +97,7 @@ export default {
       let x = /^[a-z0-9]+$/i.exec(this.password)
 
       if (x) {
-        if (x && this.login.length >=5) return true
+        if (x && this.password.length >=5) return true
       }
 
       return false
@@ -127,6 +127,7 @@ export default {
           this.user.access = false
           let error = 'Login time has expired, please login!'
           alert(error)
+          location.href = "/#/"
         }
         else {
           let error = 'Error in checkAuth(hash)'+
@@ -160,7 +161,8 @@ export default {
                       '\nInfo: ' + data.server.information
           alert(error)
         }
-      });
+      })
+
       location.href = "/#/"
     },
 
@@ -212,22 +214,6 @@ export default {
           localStorage['user'] = JSON.stringify(user)
         }
       })
-    },
-
-    cardEvent(type, id) {
-      // console.log(type, id)
-      switch (type) {
-        case 'byAuthor':
-          this.contentByAuthor(id)
-        break;
-        case 'byGenre':
-          this.contentByGenre(id)
-        break;
-        case 'toCart':
-          this.$emit('toCart', id)
-        break;
-      }
-
     },
 
     status(response) { 

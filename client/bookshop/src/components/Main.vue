@@ -4,7 +4,9 @@
     <div class="row col-12">
       <div class="col-2">
         <div class="list-group">
-          <button @click="contentAllBooks()" class="list-group-item list-group-item-primary text-center">All Books</button>
+          <button @click="contentAllBooks()" class="list-group-item list-group-item-primary text-center">
+            All Books
+          </button>
 
           <button class="list-group-item list-group-item-secondary text-center" type="button" data-toggle="collapse" data-target="#collapseAuthors" aria-expanded="false" aria-controls="collapseAuthors">
             Authors
@@ -74,7 +76,7 @@ export default {
     .then((data) => {
       // console.log(data)
       this.allAuthors = data.data
-    });
+    })
     
     fetch(this.URL + 'client/api/shop/genres/', {method: 'GET'})
     .then(this.status)
@@ -82,7 +84,7 @@ export default {
     .then((data) => {
       // console.log(data)
       this.allGenres = data.data
-    });
+    })
     
     fetch(this.URL + 'client/api/shop/books/', {method: 'GET'})
     .then(this.status)
@@ -91,8 +93,7 @@ export default {
       // console.log(data.data)
       this.allBooks = data.data
       this.content = data.data
-    });
-
+    })
   },
 
   methods: {
@@ -158,18 +159,8 @@ export default {
         case 'byGenre':
           this.contentByGenre(id)
         break;
-        case 'toCart':
-          this.$emit('toCart', id)
-        break;
       }
-
     },
   }
-
-  // methods: {
-  //   cardEvent(type, id) {
-  //     this.$emit('cardEvent', type, id)
-  //   }
-  // }
 }
 </script>

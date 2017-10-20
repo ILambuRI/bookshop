@@ -2,7 +2,7 @@
   <div class="row justify-content-md-center">
     <div class="row col-md-8">
       <div class="col-md-12">
-        <table class="table table-striped font-weight-bold">
+        <table class="table table-hover font-weight-bold">
           <thead class="thead-inverse">
             <tr>
               <th>№</th>
@@ -14,7 +14,7 @@
             </tr>
           </thead>
           <tbody v-for="(order, key) in userOrders" :key="key">
-            <tr>
+            <tr data-toggle="collapse" :data-target="'#collapseInfoBooks'+order.id" aria-expanded="false" :aria-controls="'collapseInfoBooks'+order.id">
               <td>{{ order.id }}</td>
               <td>{{ timeToDate(order.time) }}</td>
               <td>{{ order.orderTotalPrice }}</td>
@@ -22,7 +22,7 @@
               <td>{{ order.paymentName }}</td>
               <td>{{ order.statusName }}</td>
             </tr>
-            <tr>
+            <tr class="collapse" :id="'collapseInfoBooks'+order.id">
               <td colspan="6">
                 <table class="table table-striped font-weight-bold">
                   <thead class="thead-inverse">
@@ -47,25 +47,11 @@
           </tbody>
         </table>
 
-        <!-- <table class="table table-striped font-weight-bold">
-          <thead class="thead-inverse">
-            <tr>
-              <th>Name</th>
-              <th>Discount</th>
-              <th>Count</th>
-              <th>Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(book, key) in userOrders.books" :key="key">
-              <td>{{ book.booksName }}</td>
-              <td>{{ book.bookDiscount }}</td>
-              <td>{{ book.bookTotalPrice }}</td>
-              <td>{{ book.count }}%</td>
-            </tr>
-          </tbody>
-        </table> -->
-
+        <router-link :to="'/'">
+          <button class="float-left btn btn-dark">
+            Home
+          </button>
+        </router-link>
       </div>
     </div>
   </div>
@@ -86,7 +72,6 @@ export default {
   props: ["user"],
 
   computed: {
-
   },
 
   created() {
@@ -98,13 +83,6 @@ export default {
     .then((data) => {
       if (data.server.status == 200) {
         this.userOrders = data.data
-      }
-      else {
-        let error = 'Error in logIn()'+
-                    '\nStatus: ' + data.server.status +
-                    '\nError code: ' + data.server.code +
-                    '\nInfo: ' + data.server.information
-        alert(error)
       }
     })
   },

@@ -114,18 +114,6 @@ export default {
 
     cardEvent(type, id) {
       this.$emit('cardEvent', type, id)
-
-      // switch (type) {
-      //   case 'byAuthor':
-      //     this.$emit('byAuthor', id, 'author')
-      //   break;
-      //   case 'byGenre':
-      //     this.$emit('byGenre', id)
-      //   break;
-      //   case 'toCart':
-      //     this.$emit('toCart', id)
-      //   break;
-      // }
     },
 
     status(response) { 

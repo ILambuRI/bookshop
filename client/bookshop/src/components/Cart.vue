@@ -202,7 +202,7 @@ export default {
         if (data.server.status == 200) {
         }
         else {
-          let error = 'Error in logIn()'+
+          let error = 'Error in saveCount()'+
                       '\nStatus: ' + data.server.status +
                       '\nError code: ' + data.server.code +
                       '\nInfo: ' + data.server.information
@@ -243,7 +243,7 @@ export default {
           if (data.server.status == 200) {
           }
           else {
-            let error = 'Error in logOut()'+
+            let error = 'Error in deleteBooks()'+
                         '\nStatus: ' + data.server.status +
                         '\nError code: ' + data.server.code +
                         '\nInfo: ' + data.server.information
@@ -275,7 +275,7 @@ export default {
         if (data.server.status == 200) {
         }
         else {
-          let error = 'Error in logIn()'+
+          let error = 'Error in saveOrder()'+
                       '\nStatus: ' + data.server.status +
                       '\nError code: ' + data.server.code +
                       '\nInfo: ' + data.server.information
