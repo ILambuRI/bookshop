@@ -5,11 +5,11 @@ function autoloadClass ($class)
     $path = __DIR__ . "/rest/" . $class . ".php";
     $path = str_replace("\\", '/', $path);
 
-    if (file_exists($path)) 
+    if (file_exists($path))
     {
         require_once $path;
 
-        if (class_exists($class)) 
+        if (class_exists($class))
             return true;
     }
 
@@ -30,7 +30,7 @@ define('ERROR_CODE_INFORMATION', 'http://bookshop/server/ErrorCodeInformation.ht
 // define('M_USER','user10');
 // define('M_PASS','tuser10');
 // define('M_DB','user10');
-// define('ERROR_CODE_INFORMATION', 'http://192.168.0.15/~user10/MYPHP/REST/server/ErrorCodeInformation.html');
+// define('ERROR_CODE_INFORMATION', 'http://192.168.0.15/~user10/MYPHP/bookshop/server/ErrorCodeInformation.html');
 
 /* SERVICE */
 define('DEFAULT_TYPE', '.json');

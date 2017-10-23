@@ -3,62 +3,62 @@
     <div class="col-2">
       <div class="list-group">
         <router-link to="/admin/new-author" class="list-group-item list-group-item-primary text-center">
-            New Author
+          New Author
         </router-link>
         <button class="list-group-item list-group-item-secondary text-center" type="button" data-toggle="collapse" data-target="#collapseAuthors" aria-expanded="false" aria-controls="collapseAuthors">
           All Authors
         </button>
         <div class="collapse" id="collapseAuthors">
-          <router-link to="/admin/edit-author" @click="contentByAuthor(author.id)" v-for="(author, key) in adminData.allAuthors" :key="key" class="list-group-item list-group-item-action list-group-item-light">
+          <router-link :to="'/admin/edit-author/'+author.id" @click="contentByAuthor(author.id)" v-for="(author, key) in adminData.allAuthors" :key="key" class="list-group-item list-group-item-action list-group-item-light">
             {{ author.authorsName }}
           </router-link>
         </div>
 
-        <button @click="contentAllBooks()" class="list-group-item list-group-item-primary text-center">
+        <router-link to="/admin/new-genre" class="list-group-item list-group-item-primary text-center">
           New Genre
-        </button>
+        </router-link>
         <button class="list-group-item list-group-item-secondary text-center" type="button" data-toggle="collapse" data-target="#collapseGenres" aria-expanded="false" aria-controls="collapseGenres">
           All Genres
         </button>
         <div class="collapse" id="collapseGenres">
-          <button @click="contentByAuthor(genre.id)" v-for="(genre, key) in adminData.allGenres" :key="key" class="list-group-item list-group-item-action list-group-item-light">
+          <router-link :to="'/admin/edit-genre/'+genre.id" v-for="(genre, key) in adminData.allGenres" :key="key" class="list-group-item list-group-item-action list-group-item-light">
             {{ genre.genresName }}
-          </button>
+          </router-link>
         </div>
 
-        <button @click="contentAllBooks()" class="list-group-item list-group-item-primary text-center">
+        <router-link to="/admin/new-book" class="list-group-item list-group-item-primary text-center">
           New Book
-        </button>
+        </router-link>
         <button class="list-group-item list-group-item-secondary text-center" type="button" data-toggle="collapse" data-target="#collapseBooks" aria-expanded="false" aria-controls="collapseBooks">
           All Books
         </button>
         <div class="collapse" id="collapseBooks">
-          <button @click="contentByAuthor(book.id)" v-for="(book, key) in adminData.allBooks" :key="key" class="list-group-item list-group-item-action list-group-item-light">
+          <router-link :to="'/admin/edit-book/'+book.id" v-for="(book, key) in adminData.allBooks" :key="key" class="list-group-item list-group-item-action list-group-item-light">
             {{ book.booksName }}
-          </button>
+          </router-link>
         </div>
 
-        <button @click="contentAllBooks()" class="list-group-item list-group-item-primary text-center">
+        <router-link to="/admin/new-user" class="list-group-item list-group-item-primary text-center">
           New User
-        </button>
+        </router-link>
         <button class="list-group-item list-group-item-secondary text-center" type="button" data-toggle="collapse" data-target="#collapseUsers" aria-expanded="false" aria-controls="collapseUsers">
           All Users
         </button>
         <div class="collapse" id="collapseUsers">
-          <button @click="contentByAuthor(user.id)" v-for="(user, key) in adminData.allUsers" :key="key" class="list-group-item list-group-item-action list-group-item-light">
+          <router-link :to="'/admin/edit-user/'+user.id" v-for="(user, key) in adminData.allUsers" :key="key" class="list-group-item list-group-item-action list-group-item-light">
             {{ user.login }}
-          </button>
+          </router-link>
         </div>
 
-        <button @click="contentAllBooks()" class="list-group-item list-group-item-primary text-center">
+        <router-link to="/admin/all-orders" class="list-group-item list-group-item-primary text-center">
           All Orders
-        </button>
+        </router-link>
       </div>
     </div>
 
     <div class="col">
       <div class="row justify-content-center">
-          <router-view :user="user" :adminData="adminData"/>
+          <router-view :user="user" :adminData="adminData" @adminEvent="adminEvent"/>
       </div>
     </div>
   </div>
@@ -77,6 +77,8 @@ export default {
         allAuthors: [],
         allGenres: [],
         allBooks: [],
+        allDiscounts: [],
+        allStatus: [],
         allUsers: [],
         allOrders: [],
       }
@@ -94,51 +96,109 @@ export default {
 
   created() {
     if (this.user.admin != 1) location.href = "/#/"
-
-    fetch(this.URL + 'client/api/shop/authors/', {method: 'GET'})
-    .then(this.status)
-    .then(this.json)
-    .then((data) => {
-      // console.log(data)
-      this.adminData.allAuthors = data.data
-    })
     
-    fetch(this.URL + 'client/api/shop/genres/', {method: 'GET'})
-    .then(this.status)
-    .then(this.json)
-    .then((data) => {
-      // console.log(data)
-      this.adminData.allGenres = data.data
-    })
-    
-    fetch(this.URL + 'client/api/shop/books/', {method: 'GET'})
-    .then(this.status)
-    .then(this.json)
-    .then((data) => {
-      // console.log(data.data)
-      this.adminData.allBooks = data.data
-    })
-
-    fetch(this.URL + 'client/api/admin/orders/' + this.user.hash, {method: 'GET'})
-    .then(this.status)
-    .then(this.json)
-    .then((data) => {
-      if (data.server.status == 200) {
-        this.adminData.allOrders = data.data
-      }
-    })
-
-    fetch(this.URL + 'client/api/admin/users/' + this.user.hash, {method: 'GET'})
-    .then(this.status)
-    .then(this.json)
-    .then((data) => {
-      if (data.server.status == 200) {
-        this.adminData.allUsers = data.data
-      }
-    })
+    this.getAuthors()
+    this.getGenres()
+    this.getBooks()
+    this.getDiscounts()
+    this.getStatus()
+    this.getOrders()
+    this.getUsers()
   },
 
   methods: {
+    getAuthors() {
+      fetch(this.URL + 'client/api/shop/authors/', {method: 'GET'})
+      .then(this.status)
+      .then(this.json)
+      .then((data) => {
+        // console.log(data)
+        this.adminData.allAuthors = data.data
+      })
+    },
+
+    getGenres() {
+      fetch(this.URL + 'client/api/shop/genres/', {method: 'GET'})
+      .then(this.status)
+      .then(this.json)
+      .then((data) => {
+        // console.log(data)
+        this.adminData.allGenres = data.data
+      })
+    },
+
+    getBooks() {
+      fetch(this.URL + 'client/api/shop/books/', {method: 'GET'})
+      .then(this.status)
+      .then(this.json)
+      .then((data) => {
+        // console.log(data.data)
+        this.adminData.allBooks = data.data
+      })
+    },
+
+    getDiscounts() {
+      fetch(this.URL + 'client/api/shop/discounts/', {method: 'GET'})
+      .then(this.status)
+      .then(this.json)
+      .then((data) => {
+        // console.log(data.data)
+        this.adminData.allDiscounts = data.data
+      })
+    },
+
+    getStatus() {
+      fetch(this.URL + 'client/api/shop/status/', {method: 'GET'})
+      .then(this.status)
+      .then(this.json)
+      .then((data) => {
+        // console.log(data.data)
+        this.adminData.allStatus = data.data
+      })
+    },
+
+    getOrders() {
+      fetch(this.URL + 'client/api/admin/orders/' + this.user.hash, {method: 'GET'})
+      .then(this.status)
+      .then(this.json)
+      .then((data) => {
+        if (data.server.status == 200) {
+          this.adminData.allOrders = data.data
+        }
+      })
+    },
+
+    getUsers() {
+      fetch(this.URL + 'client/api/admin/users/' + this.user.hash, {method: 'GET'})
+      .then(this.status)
+      .then(this.json)
+      .then((data) => {
+        if (data.server.status == 200) {
+          this.adminData.allUsers = data.data
+        }
+      })
+    },
+
+    adminEvent(type) {
+      switch (type) {
+        case 'Authors':
+          this.getAuthors()
+        break;
+        case 'Genres':
+          this.getGenres()
+        break;
+        case 'Books':
+          this.getBooks()
+        break;
+        case 'Orders':
+          this.getOrders()
+        break;
+        case 'Users':
+          this.getUsers()
+        break;
+      }
+    },
+    
     status(response) { 
       if (response.status == 200) {
         return Promise.resolve(response)

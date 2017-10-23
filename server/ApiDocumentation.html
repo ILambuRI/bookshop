@@ -53,6 +53,12 @@
         [GET] bookshop/client/api/shop/status/ <br>
         Get all status from the table. (grouping by id)
     </p>
+
+    <p><strong>discounts:</strong></p>
+    <p>
+        [GET] bookshop/client/api/shop/discounts/ <br>
+        Get all discounts from the table. (grouping by id)
+    </p>
     <br><br>
 
     <h3>User:</h3>
@@ -200,14 +206,14 @@
     <p>
         [POST] bookshop/client/api/admin/books/ <br>
         Adding a new book to the table. <br>
-        hash(admin) | name(books) | description | pubyear(int) | price(int) | idDiscount <br>
+        hash(admin) | name(books 3-100) | description | pubyear(int 1-4) | price(int 1-10) | idDiscount <br>
         authorsId(1,2,3 etc.) | genresId(1,2,3 etc.) - input. <br>
         Return id(new book) or 400+.
     </p>
     <p>
         [PUT] bookshop/client/api/admin/books/ <br>
         Update book in the table. <br>
-        hash(admin) | id(book) | name(books) | description | pubyear(int) | price(int) | idDiscount <br>
+        hash(admin) | id(book) | name(books 3-100) | description | pubyear(int 1-4) | price(int 1-10) | idDiscount <br>
         authorsId(1,2,3 etc.) | genresId(1,2,3 etc.) - input. <br>
         Return 200 or 400+.
     </p>

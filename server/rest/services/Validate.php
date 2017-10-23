@@ -48,7 +48,7 @@ class Validate
 	}
 
 	/**
-	 * Сleaning the array from white space > 2
+	 * Сleaning the array from white space > 1
 	 * @return array
 	 */
 	static function trimArrayData($data)

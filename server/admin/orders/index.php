@@ -31,6 +31,7 @@ class Orders extends Rest
                        bookshop_orders.clientDiscount,
                        bookshop_payment.paymentName,
                        bookshop_orders.time,
+                       bookshop_status.id AS statusId,
                        bookshop_status.statusName,
                        bookshop_orders.orderTotalPrice
                 FROM bookshop_info_order
@@ -155,6 +156,7 @@ class Orders extends Rest
                     'clientDiscount' => $value['clientDiscount'],
                     'orderTotalPrice' => $value['orderTotalPrice'],
                     'time' => $value['time'],
+                    'statusId' => $value['statusId'],
                     'statusName' => $value['statusName'],
                     'books' => [
                         [

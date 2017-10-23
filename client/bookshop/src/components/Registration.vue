@@ -147,6 +147,9 @@ export default {
           if (this.user.admin == 0) {
             location.href = "/#/"
           }
+          else {
+            location.reload()
+          }
         }
         else {
           let error = 'Error in saveUser()'+
@@ -156,9 +159,6 @@ export default {
           alert(error)
         }
       })
-
-      this.login = this.password = this.confirm = this.phone = ''
-      this.loginExist = false
     },
 
     checkLogin() {

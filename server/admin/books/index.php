@@ -29,13 +29,16 @@ class Books extends Rest
         if ( !$this->checkDiscountId($this->params['idDiscount']) )
             $this->response( '', 404, '064', true );
 
-        if ( !Validate::onlyNumbers($this->params['pubyear']) )
+        if ( !Validate::onlyNumbers($this->params['pubyear']) || strlen($this->params['pubyear']) > 4 )
             $this->response( '', 406, '065', true );
 
-        if ( !Validate::onlyNumbers($this->params['price']) )
+        if ( !Validate::onlyNumbers($this->params['price']) || strlen($this->params['pubyear']) > 10 )
             $this->response( '', 406, '066', true );
 
         if ( !$this->params['name'] = Validate::clearText($this->params['name']) )
+            $this->response( '', 406, '067', true );
+
+        if (strlen($this->params['name']) > 100)
             $this->response( '', 406, '067', true );
 
         if( !$this->params['description'] = Validate::clearText($this->params['description']) )
@@ -120,28 +123,31 @@ class Books extends Rest
             $this->response( '', 406, '033', true );
         
         if ( !$this->checkBooksId($this->params['id']) )
-            $this->response( '', 404, '064', true );
+            $this->response( '', 404, '073', true );
 
         if ( !$this->checkDiscountId($this->params['idDiscount']) )
-            $this->response( '', 404, '064', true );
+            $this->response( '', 404, '074', true );
 
         if ( !Validate::onlyNumbers($this->params['pubyear']) )
-            $this->response( '', 406, '065', true );
+            $this->response( '', 406, '075', true );
 
         if ( !Validate::onlyNumbers($this->params['price']) )
-            $this->response( '', 406, '066', true );
+            $this->response( '', 406, '076', true );
 
         if ( !$this->params['name'] = Validate::clearText($this->params['name']) )
-            $this->response( '', 406, '067', true );
+            $this->response( '', 406, '077', true );
+
+        if (strlen($this->params['name']) > 100)
+            $this->response( '', 406, '077', true );
 
         if( !$this->params['description'] = Validate::clearText($this->params['description']) )
-            $this->response( '', 406, '068', true );
+            $this->response( '', 406, '078', true );
 
         $authorsId = explode(',', $this->params['authorsId']);
         foreach ($authorsId as $id)
         {
             if ( !$this->checkAuthorsId($id) )
-                $this->response( '', 404, '069', true );
+                $this->response( '', 404, '079', true );
 
             $authorsIdParams[] = ['id' => $id];
         }
@@ -150,7 +156,7 @@ class Books extends Rest
         foreach ($genresId as $id)
         {
             if ( !$this->checkGenresId($id) )
-                $this->response( '', 404, '070', true );
+                $this->response( '', 404, '080', true );
                 
             $genresIdParams[] = ['id' => $id];                
         }
@@ -184,14 +190,14 @@ class Books extends Rest
         $result = $this->db->execTransaction($sql, $authorsIdParams);
         
         if (!$result)
-            $this->response( '', 404, '071', true );
+            $this->response( '', 404, '081', true );
     
         $sql = 'INSERT INTO bookshop_books_to_genres (id_book, id_genre)
                 VALUES (' .$this->params['id']. ', :id)';
         $result = $this->db->execTransaction($sql, $genresIdParams);
 
         if (!$result)
-            $this->response( '', 404, '072', true );
+            $this->response( '', 404, '082', true );
         
         $this->response();
     }

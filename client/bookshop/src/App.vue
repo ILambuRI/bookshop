@@ -32,6 +32,9 @@
         </div>
 
         <div v-if="user.access" class="row">
+          <router-link v-if="user.admin == 1" :to="'/admin'" class="btn btn-light mr-sm-1 my-sm-0 text-primary font-weight-bold">
+            Admin panel
+          </router-link>
           <router-link :to="'/orders'">
             <button type="button" class="btn btn-light mr-sm-1 my-sm-0 text-primary font-weight-bold">
               {{ user.login }}
@@ -135,6 +138,7 @@ export default {
                       '\nError code: ' + data.server.code +
                       '\nInfo: ' + data.server.information
           alert(error)
+          location.href = "/#/"
         }
       })
     },

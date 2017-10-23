@@ -17,9 +17,10 @@
           {{ genre.genresName }}
         </a>
       </p>
-      <p class="card-text" v-if="book.percent != '0'"><strong>Discount:</strong>  {{ book.percent }}%</p>
+      <p class="card-text" v-if="book.percent != '0'"><strong>Discount:</strong> {{ book.discountsName }} ({{ book.percent }}%)</p>
       <p class="card-text"><strong>Pubyear:</strong>  {{ book.pubyear }}</p>
-      <p class="card-text"><strong>Price:</strong>  {{ book.price }} <strong>₴</strong></p>
+      <p class="card-text" v-if="book.percent == '0'"><strong>Price:</strong>  {{ book.price }} <strong>₴</strong></p>
+      <p class="card-text" v-if="book.percent != '0'"><strong>Price:</strong>  <del>{{ book.price }}</del>  {{ book.price - (book.price * book.percent / 100) }} <strong>₴</strong></p>
 
       <div v-if="btnToCartAccess">
         <button @click="toCart()" class="btn btn-outline-dark" :disabled="!user.access">
@@ -41,12 +42,6 @@
     </div>
   </div>
 
-    <!-- <router-link :to="'/book/' + book.id">
-      <img class="card-img-top"  src="https://i.ytimg.com/vi/RuLhzVySrns/hqdefault.jpg" :alt="book.booksName" />
-    </router-link>
-    <div class="card-body">
-      <p class="card-text">{{ book.name }} - <strong>{{ book.price }}</strong></p>
-    </div> -->
 </template>
 
 <script>

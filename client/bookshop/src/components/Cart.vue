@@ -48,21 +48,21 @@
         </div>
         <div class="clearfix">
           <span class="float-left font-weight-bold">In your Cart:</span>
-          <span class="float-right font-weight-bold">{{ getTotal }} EUR</span>
+          <span class="float-right font-weight-bold">{{ getTotal }} ₴</span>
         </div>
         <div class="clearfix">
           <span class="float-left font-weight-bold">Your discount:</span>
-          <span class="float-right font-weight-bold">{{ user.percent }}% EUR</span>
+          <span class="float-right font-weight-bold">{{ user.percent }}%</span>
         </div>
         <div class="clearfix">
           <span class="float-left font-weight-bold">Proceeds:</span>
-          <span class="float-right font-weight-bold">{{ getUserProceeds }} EUR</span>
+          <span class="float-right font-weight-bold">{{ getUserProceeds }} ₴</span>
         </div>
         <p></p>
         <div class="clearfix">
           <h4 class="float-left font-weight-bold">Grand Total:</h4>
           <h4 class="float-right font-weight-bold">
-            {{ getGrandTotal }} EUR
+            {{ getGrandTotal }} ₴
           </h4>
         </div>
         <div>

@@ -33,6 +33,7 @@ class Users extends Rest
                        bookshop_users.login,
                        bookshop_users.password,
                        bookshop_users.phone,
+                       bookshop_discounts.id AS discountsId,
                        bookshop_discounts.percent,
                        bookshop_users.admin,
                        bookshop_users.active
