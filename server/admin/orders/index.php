@@ -1,7 +1,7 @@
 <?php
 require_once("../../config.php");
-require_once("../Db.php");
 
+use lib\db\BookshopDb as Db;
 class Orders extends Rest
 {
     /**Database object (PDO)*/

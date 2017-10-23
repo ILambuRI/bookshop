@@ -123,10 +123,6 @@ class Books extends Rest
 
         if( !$this->params['description'] = Validate::clearText($this->params['description']) )
             $this->response( '', 406, '078', true );
-        
-        /* Parameters for the books and authors links table */
-        $transactionParams[1]['sql'] = 'INSERT INTO bookshop_books_to_authors (id_book, id_author)
-                                        VALUES (' .$this->params['id']. ', :id)';
 
         $authorsId = explode(',', $this->params['authorsId']);
         foreach ($authorsId as $id)
@@ -134,12 +130,8 @@ class Books extends Rest
             if ( !$this->checkAuthorsId($id) )
                 $this->response( '', 404, '079', true );
 
-                $transactionParams[1]['params'][] = ['id' => $id];
+            $authorsIdParams[] = ['id' => $id];
         }
-
-        /* Parameters for the books and genres links table */
-        $transactionParams[2]['sql'] = 'INSERT INTO bookshop_books_to_genres (id_book, id_genre)
-                                        VALUES (' .$this->params['id']. ', :id)';
     
         $genresId = explode(',', $this->params['genresId']);
         foreach ($genresId as $id)
@@ -147,7 +139,7 @@ class Books extends Rest
             if ( !$this->checkGenresId($id) )
                 $this->response( '', 404, '080', true );
                 
-                $transactionParams[2]['params'][] = ['id' => $id];                
+            $genresIdParams[] = ['id' => $id];                
         }
 
         unset($this->params['hash'],
@@ -157,17 +149,6 @@ class Books extends Rest
               $genresId              
         );
 
-        /* Parameters for the book */
-        $transactionParams[0]['sql'] = 'UPDATE bookshop_books
-                                        SET booksName = :name,
-                                            description = :description,
-                                            pubyear = :pubyear,
-                                            price = :price,
-                                            id_discount = :idDiscount
-                                        WHERE id = :id';
-
-        $transactionParams[0]['params'] = $this->params;
-        
         $sql = 'DELETE FROM bookshop_books_to_authors
                 WHERE id_book = ' . $this->params['id'];
         $result = $this->db->execute($sql);
@@ -176,7 +157,26 @@ class Books extends Rest
                 WHERE id_book = ' . $this->params['id'];
         $result = $this->db->execute($sql);
         
-        $result = $this->db->execTransaction($transactionParams);
+        $sql = 'UPDATE bookshop_books
+                SET booksName = :name,
+                    description = :description,
+                    pubyear = :pubyear,
+                    price = :price,
+                    id_discount = :idDiscount
+                WHERE id = :id';
+        $result = $this->db->execute($sql, $this->params);
+        
+
+        $sql = 'INSERT INTO bookshop_books_to_authors (id_book, id_author)
+                VALUES (' .$this->params['id']. ', :id)';
+        $result = $this->db->execTransaction($sql, $authorsIdParams);
+        
+        if (!$result)
+            $this->response( '', 404, '081', true );
+    
+        $sql = 'INSERT INTO bookshop_books_to_genres (id_book, id_genre)
+                VALUES (' .$this->params['id']. ', :id)';
+        $result = $this->db->execTransaction($sql, $genresIdParams);
 
         if (!$result)
             $this->response( '', 404, '082', true );

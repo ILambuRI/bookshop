@@ -1,6 +1,7 @@
 <?php
 require_once("../../config.php");
-require_once("../Db.php");
+
+use lib\db\BookshopDb as Db;
 
 class Discounts extends Rest
 {

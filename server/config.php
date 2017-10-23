@@ -34,7 +34,8 @@ define('ERROR_CODE_INFORMATION', 'http://bookshop/server/ErrorCodeInformation.ht
 
 /* SERVICE */
 define('DEFAULT_TYPE', '.json');
-define('HASH_LIFETIME', '7200');
+define('HASH_LIFETIME', '7200'); // 2 hours
+define('DEFAULT_ORDER_STATUS_ID', 4); // 4 = Not Ready
 
 /* ERRORs */
 define('DELIMITER', ' | ');

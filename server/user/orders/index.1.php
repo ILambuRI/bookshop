@@ -56,7 +56,7 @@ class Orders extends Rest
     /**
      * Record a new order in the table orders(and info_order) and clear user cart.
      * hash | id(payment) - input.
-     * Return 200 or 400+.
+     * Return order ID.
      */
     protected function postOrders()
     {
@@ -72,24 +72,21 @@ class Orders extends Rest
             $this->response( '', 404, '029', true );
         
         /* Forming parameters for a transaction in a table info_order */
-        $transactionParams[1]['sql'] = 'INSERT INTO bookshop_info_order (id_order, id_book, bookDiscount, count, bookTotalPrice)
-                                        VALUES (:lastId, :id_book, :bookDiscount, :count, :bookTotalPrice)';
-
-        foreach ($cartData as $key => $NotUsed)
+        foreach ($cartData as $key => $notUsed)
         {
-            $transactionParams[1]['params'][$key]['id_book'] = $cartData[$key]['id_book'];
-            $transactionParams[1]['params'][$key]['bookDiscount'] = $cartData[$key]['percent'];
-            $transactionParams[1]['params'][$key]['count'] = $cartData[$key]['count'];
+            $infoOrder[$key]['id_book'] = $cartData[$key]['id_book'];
+            $infoOrder[$key]['bookDiscount'] = $cartData[$key]['percent'];
+            $infoOrder[$key]['count'] = $cartData[$key]['count'];
             $totalPrice = (int)$cartData[$key]['price'] * (int)$cartData[$key]['count'];            
 
             if ((int)$cartData[$key]['percent'])
                 $totalPrice -= $totalPrice * (int)$cartData[$key]['percent'] / 100;
             
-            $transactionParams[1]['params'][$key]['bookTotalPrice'] = $totalPrice;
+            $infoOrder[$key]['bookTotalPrice'] = $totalPrice;
             $orderTotalPrice += $totalPrice;
         }
 
-        /* Forming parameters for a transaction in a table order */
+        /* Forming parameters for insert in a table orders */
         $order['id_user'] = $userInfo[0]['id'];
         $order['id_payment'] = $this->params['id'];
         $order['clientDiscount'] = $userInfo[0]['percent'];
@@ -100,13 +97,28 @@ class Orders extends Rest
         $order['orderTotalPrice'] = $orderTotalPrice;
         $order['time'] = time();
         /* Default status */
-        $order['id_status'] = DEFAULT_ORDER_STATUS_ID;
+        $order['id_status'] = 4;
 
-        $transactionParams[0]['params'] = $order;
-        $transactionParams[0]['sql'] = 'INSERT INTO bookshop_orders (id_user, clientDiscount, id_payment, orderTotalPrice, time, id_status)
-                                        VALUES (:id_user, :clientDiscount, :id_payment, :orderTotalPrice, :time, :id_status)';
+        $sql = 'INSERT INTO bookshop_orders (id_user, clientDiscount, id_payment, orderTotalPrice, time, id_status)
+                VALUES (:id_user, :clientDiscount, :id_payment, :orderTotalPrice, :time, :id_status)';
+        $result = $this->db->execute($sql, $order);
+        
+        if (!$result)
+            $this->response( '', 404, '031', true );
 
-        $result = $this->db->execTransaction($transactionParams, true);
+        /* Get the ID of the inserted order */
+        $orderId = $this->db->dbh->lastInsertId();
+
+        // foreach ($infoOrder as $key => $arrParams)
+        // {
+        //     $sql = 'INSERT INTO bookshop_info_order (id_order, id_book, bookDiscount, count, bookTotalPrice)
+        //             VALUES (' .$orderId. ', :id_book, :bookDiscount, :count, :bookTotalPrice)';
+        //     $result = $this->db->execute($sql, $arrParams);
+        // }
+
+        $sql = 'INSERT INTO bookshop_info_order (id_order, id_book, bookDiscount, count, bookTotalPrice)
+                VALUES (' .$orderId. ', :id_book, :bookDiscount, :count, :bookTotalPrice)';
+        $result = $this->db->execTransaction($sql, $infoOrder);
 
         if (!$result)
             $this->response( '', 404, '032', true );
@@ -116,7 +128,7 @@ class Orders extends Rest
                 WHERE id_user = :id_user';
         $this->db->execute($sql, ['id_user' => $userInfo[0]['id']]);
         
-        $this->response();
+        $this->response($orderId);
     }
 
 
