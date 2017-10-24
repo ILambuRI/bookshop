@@ -2,8 +2,8 @@
 require_once("../../config.php");
 
 use lib\db\BookshopDb as Db;
-use services\Validate;
-use services\Convert;
+use lib\services\Validate;
+use lib\services\Convert;
 
 class Authors extends Rest
 {

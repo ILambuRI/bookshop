@@ -1,6 +1,6 @@
 <?php
 
-namespace services;
+namespace lib\services;
 
 class Validate
 {

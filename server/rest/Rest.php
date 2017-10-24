@@ -1,7 +1,7 @@
 <?php
 
-use services\Validate;
-use services\Convert;
+use lib\services\Validate;
+use lib\services\Convert;
 
 abstract class Rest
 {
@@ -84,7 +84,7 @@ abstract class Rest
 	 * Convert the data to the desired format for the answer.
 	 * @return array
 	 */
-	protected function converting($data)
+	private function converting($data)
 	{
 		switch ($this->contentType)
 		{
@@ -125,7 +125,7 @@ abstract class Rest
 	 * If "typeResponseCode == true"
 	 * the response code will always go through the headers.
 	 */
-	public function response($data = '', $code = 200, $headerText = false, $info = false)
+	protected function response($data = '', $code = 200, $headerText = false, $info = false)
     {
 		if (!$this->typeResponseCode)
 		{

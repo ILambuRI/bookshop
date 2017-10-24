@@ -1,8 +1,8 @@
 RewriteEngine On
 
 # WORK #
-#RewriteBase /server/
-#RewriteRule (.*) http://192.168.0.15/~user10/MYPHP/bookshop/server/$1 [P]
+RewriteBase /server/
+RewriteRule (.*) http://192.168.0.15/~user10/MYPHP/bookshop/server/$1 [P]
 
 # HOME #
-RewriteRule (.*) http://bookshop/server/$1 [P]
+#RewriteRule (.*) http://bookshop/server/$1 [P]

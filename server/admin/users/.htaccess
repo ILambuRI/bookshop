@@ -1,7 +1,7 @@
 RewriteEngine On
 
 # WORK #
-#RewriteBase /~user10/MYPHP/bookshop/server/admin/users
+RewriteBase /~user10/MYPHP/bookshop/server/admin/users
 
 # HOME #
 #RewriteBase /server/admin/users/
