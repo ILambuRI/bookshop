@@ -19,18 +19,18 @@ function autoloadClass ($class)
 spl_autoload_register('autoloadClass');
 
 /* MySql Home */
-define('M_HOST','localhost');
-define('M_USER','root');
-define('M_PASS','');
-define('M_DB','book_shop');
-define('ERROR_CODE_INFORMATION', 'http://bookshop/server/ErrorCodeInformation.html');
+// define('M_HOST','localhost');
+// define('M_USER','root');
+// define('M_PASS','');
+// define('M_DB','book_shop');
+// define('ERROR_CODE_INFORMATION', 'http://bookshop/server/ErrorCodeInformation.html');
 
 /* MySql Class */
-// define('M_HOST','localhost');
-// define('M_USER','user10');
-// define('M_PASS','tuser10');
-// define('M_DB','user10');
-// define('ERROR_CODE_INFORMATION', 'http://192.168.0.15/~user10/MYPHP/bookshop/server/ErrorCodeInformation.html');
+define('M_HOST','localhost');
+define('M_USER','user10');
+define('M_PASS','tuser10');
+define('M_DB','user10');
+define('ERROR_CODE_INFORMATION', 'http://192.168.0.15/~user10/MYPHP/bookshop/server/ErrorCodeInformation.html');
 
 /* SERVICE */
 define('DEFAULT_TYPE', '.json');
