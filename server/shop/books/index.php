@@ -1,5 +1,5 @@
 <?php
-require_once("../../config.php");
+require_once("/../../config.php");
 
 use lib\db\BookshopDb as Db;
 
@@ -10,6 +10,7 @@ class Books extends Rest
 
     public function __construct()
     {
+        parent::__construct();
         $this->db = new Db();
     }
     

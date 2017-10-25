@@ -10,6 +10,7 @@ class Authors extends Rest
 
     public function __construct()
     {
+        parent::__construct();
         $this->db = new Db();
     }
     

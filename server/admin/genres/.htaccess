@@ -1,7 +1,7 @@
 RewriteEngine On
 
 # WORK #
-RewriteBase /~user10/MYPHP/bookshop/server/admin/genres
+#RewriteBase /~user10/MYPHP/bookshop/server/admin/genres
 
 # HOME #
 #RewriteBase /server/admin/genres

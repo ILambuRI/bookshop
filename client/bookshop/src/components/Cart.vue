@@ -178,7 +178,7 @@ export default {
         this.payments = data.data
       }
       else {
-        let error = 'Error in logIn()'+
+        let error = 'Error in Cart created()'+
                     '\nStatus: ' + data.server.status +
                     '\nError code: ' + data.server.code +
                     '\nInfo: ' + data.server.information
@@ -283,7 +283,8 @@ export default {
         }
       })
 
-      location.href = "/#/orders"
+      location.replace("/#/orders")
+      location.reload()
     },
 
 
