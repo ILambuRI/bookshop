@@ -1,16 +1,18 @@
 <?php
-require_once("../../config.php");
+require_once(__DIR__ . "/../../config.php");
 
 use lib\db\BookshopDb as Db;
+use lib\traits\Error;
 
-class Status extends Rest
+class Status
 {
+    use Error;
+    
     /**Database object (PDO)*/
     private $db;
 
     public function __construct()
     {
-        parent::__construct();
         $this->db = new Db();
     }
     
@@ -18,7 +20,7 @@ class Status extends Rest
      * Get the whole table of status
      * Return array grouped by id
      */
-    protected function getStatus()
+    public function getStatus()
     {
         $sql = 'SELECT bookshop_status.id,
                        bookshop_status.statusName
@@ -28,27 +30,30 @@ class Status extends Rest
         $result = $this->db->execute($sql);
 
         if (!$result)
-            $this->response( '', 404, '002', true );
+            return $this->error();
 
-        $this->response($result);
+        return $result;
     }
 }
 
-try
+if (PHP_SAPI !== 'cli')
 {
-    $api = new Status;
-    $api->table = 'status';
-    $api->play();
-}
-catch (Exception $e)
-{
-    header( "HTTP/1.1 500 Internal Server Error | " . ERROR_HEADER_CODE . $e->getMessage() );
-    header("Content-Type:text/html");
-
-    $string = ERROR_HTML_TEXT;
-    ksort( $patterns = ['/%STATUS_CODE%/', '/%ERROR_DESCRIPTION%/', '/%CODE_NUMBER%/'] );
-    ksort( $replacements = [500, 'Internal Server Error', ERROR_HEADER_CODE . $e->getMessage()] );
-    echo preg_replace($patterns, $replacements, $string);
-
-    exit;
+    try
+    {
+        $api = new Rest( new Status );
+        $api->table = 'status';
+        $api->play();
+    }
+    catch (Exception $e)
+    {
+        header( "HTTP/1.1 500 Internal Server Error | " . ERROR_HEADER_CODE . $e->getMessage() );
+        header("Content-Type:text/html");
+    
+        $string = ERROR_HTML_TEXT;
+        ksort( $patterns = ['/%STATUS_CODE%/', '/%ERROR_DESCRIPTION%/', '/%CODE_NUMBER%/'] );
+        ksort( $replacements = [500, 'Internal Server Error', ERROR_HEADER_CODE . $e->getMessage()] );
+        echo preg_replace($patterns, $replacements, $string);
+    
+        exit;
+    }
 }

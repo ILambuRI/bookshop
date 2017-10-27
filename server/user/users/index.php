@@ -1,18 +1,20 @@
 <?php
-require_once("../../config.php");
+require_once(__DIR__ . "/../../config.php");
 
 use lib\db\BookshopDb as Db;
+use lib\traits\Error;
 use lib\services\Validate;
 use lib\services\Convert;
 
-class Users extends Rest
+class Users
 {
+    use Error;
+    
     /**Database object (PDO)*/
     private $db;
     
     public function __construct()
     {
-        parent::__construct();
         $this->db = new Db();
     }
     
@@ -21,26 +23,26 @@ class Users extends Rest
      * /null(or false)/hash - check hash in table or hash lifetime.
      * Return 200 or 400+.
      */
-    protected function getUsersByParams()
+    public function getUsersByParams($params)
     {
         list($arrParams['login'],
              $arrParams['hash']
-        ) = explode('/', $this->params['params'], 3);
+        ) = explode('/', $params['params'], 3);
         
         if ( ($arrParams['login'] != 'false' && $arrParams['login'] != 'null' && $arrParams['login'] != null)
              &&
              ($arrParams['hash'] == 'false' || $arrParams['hash'] == 'null' ||  $arrParams['hash'] == null) )
         {
             if ( !Validate::checkLogin($arrParams['login']) )
-                $this->response( '', 406, '012', true );
+                return $this->error(406, 12);
 
             $sql = 'SELECT login FROM bookshop_users WHERE login = :login';
             $result = $this->db->execute($sql, ['login' => $arrParams['login']]);
             
             if (!$result)
-                $this->response( '', 404, '002', true );
+                return $this->error();
 
-            $this->response();
+            return TRUE;
         }
 
         if ( ($arrParams['hash'] != 'false' && $arrParams['hash'] != 'null' && $arrParams['hash'] != null)
@@ -51,15 +53,15 @@ class Users extends Rest
             $result = $this->db->execute($sql, ['hash' => $arrParams['hash']]);
             
             if (!$result)
-                $this->response( '', 404, '002', true );
+                return $this->error();
             
             if ( ((int)$result[0]['lifetime'] + HASH_LIFETIME) < time() )
-                $this->response( '', 404, '013', true );
+                return $this->error(406, 13);
 
-            $this->response();
+            return TRUE;
         }
 
-        $this->response( '', 404, '014', true );        
+        return $this->error(404, 14);
     }
 
     /**
@@ -67,58 +69,58 @@ class Users extends Rest
      * login | password | phone - input.
      * Return hash.
      */
-    protected function postUsers()
+    public function postUsers($params)
     {
-        if ( !Validate::checkLogin($this->params['login']) )
-            $this->response( '', 406, '003', true );
+        if ( !Validate::checkLogin($params['login']) )
+            return $this->error(406, 3);
 
-        if ( !Validate::checkPassword($this->params['password']) )
-            $this->response( '', 406, '005', true );
+        if ( !Validate::checkPassword($params['password']) )
+            return $this->error(406, 5);
 
-        if ( !Validate::checkPhone($this->params['phone']) )
-            $this->response( '', 406, '006', true );
+        if ( !Validate::checkPhone($params['phone']) )
+            return $this->error(406, 6);
 
-        if ( $this->checkLogin($this->params['login']) )
-            $this->response( '', 406, '004', true );
+        if ( $this->checkLogin($params['login']) )
+            return $this->error(406, 4);
 
-        $this->params['password'] = Convert::toMd5($this->params['password']);
-        $this->params['hash'] = Convert::toMd5( $this->params['login'] . rand(12345, PHP_INT_MAX) );
-        $this->params['lifetime'] = time();
+        $params['password'] = Convert::toMd5($params['password']);
+        $params['hash'] = Convert::toMd5( $params['login'] . rand(12345, PHP_INT_MAX) );
+        $params['lifetime'] = time();
 
         $sql = 'INSERT INTO bookshop_users (login, password, phone, id_discount, hash, lifetime)
                 VALUES (:login, :password, :phone, 1, :hash, :lifetime)';
-        $result = $this->db->execute($sql, $this->params);
+        $result = $this->db->execute($sql, $params);
 
         if (!$result)
-            $this->response( '', 404, '002', true );
+            return $this->error();
 
-        $this->response([ ['hash' => $this->params['hash']] ]);
+        return [ ['hash' => $params['hash']] ];
     }
 
     /**
      * Login - user authorization, if it is in the table,
      * we write a new hash and lifetime.
      * login | password - input
-     * Return new hash.
+     * Return user info whith new hash.
      */
-    protected function putUsers()
+    public function putUsers($params)
     {
-        if ( !Validate::checkLogin($this->params['login']) )
-            $this->response( '', 406, '007', true );
+        if ( !Validate::checkLogin($params['login']) )
+            return $this->error(406, 7);
 
-        if ( !Validate::checkPassword($this->params['password']) )
-            $this->response( '', 406, '008', true );
+        if ( !Validate::checkPassword($params['password']) )
+            return $this->error(406, 8);
         
-        $this->params['password'] = Convert::toMd5($this->params['password']);
+        $params['password'] = Convert::toMd5($params['password']);
         
-        if ( !$this->checkLogin($this->params['login']) )
-            $this->response( '', 406, '009', true );
+        if ( !$this->checkLogin($params['login']) )
+            return $this->error(406, 9);
 
-        if ( !$this->checkPassword($this->params['login'], $this->params['password']) )
-            $this->response( '', 406, '010', true );
+        if ( !$this->checkPassword($params['login'], $params['password']) )
+            return $this->error(406, 10);
             
-        $arrParams['login'] = $this->params['login'];
-        $arrParams['hash'] = Convert::toMd5( $this->params['login'] . rand(12345, PHP_INT_MAX) );
+        $arrParams['login'] = $params['login'];
+        $arrParams['hash'] = Convert::toMd5( $params['login'] . rand(12345, PHP_INT_MAX) );
         $arrParams['lifetime'] = time();
         
         $sql = 'UPDATE bookshop_users SET hash = :hash, lifetime = :lifetime
@@ -126,11 +128,9 @@ class Users extends Rest
         $result = $this->db->execute($sql, $arrParams);
 
         if (!$result)
-            $this->response( '', 404, '002', true );
+            return $this->error();
             
-        $userInfo = $this->getUserInfo($arrParams['hash']);
-
-        $this->response($userInfo);
+        return $this->getUserInfo($arrParams['hash']);
     }
 
     /**
@@ -138,26 +138,26 @@ class Users extends Rest
      * /hash - input
      * Return 200 or 400+.
      */
-    protected function deleteUsers()
+    public function deleteUsers($params)
     {
-        if ( !$this->checkHash($this->params['params']) )
-            $this->response( '', 404, '011', true );
+        if ( !$this->checkHash($params['params']) )
+            return $this->error(404, 11);
 
         $newHash = Convert::toMd5( rand(12345, PHP_INT_MAX) );        
         $sql = 'UPDATE bookshop_users SET hash = "' .$newHash. '" WHERE hash = :hash';
-        $result = $this->db->execute($sql, ['hash' => $this->params['params']]);
+        $result = $this->db->execute($sql, ['hash' => $params['params']]);
         
         if (!$result)
-            $this->response( '', 404, '002', true );
+            return $this->error();
 
-        $this->response();
+        return TRUE;
     }
 
     /** 
      * Check login in the table
      * Return bool
      */
-    protected function checkLogin($login)
+    private function checkLogin($login)
     {
         $sql = 'SELECT login FROM bookshop_users WHERE login = :login';
         $result = $this->db->execute($sql, ['login' => $login]);
@@ -172,7 +172,7 @@ class Users extends Rest
      * Check password in the table
      * Return bool
      */
-    protected function checkPassword($login, $password)
+    private function checkPassword($login, $password)
     {
         $sql = 'SELECT password FROM bookshop_users WHERE login = :login AND password = :password';
         $result = $this->db->execute($sql, ['login' => $login, 'password' => $password]);
@@ -187,7 +187,7 @@ class Users extends Rest
      * Check hash in the table
      * Return bool
      */
-    protected function checkHash($hash)
+    private function checkHash($hash)
     {
         $sql = 'SELECT hash FROM bookshop_users WHERE hash = :hash';
         $result = $this->db->execute($sql, ['hash' => $hash]);
@@ -203,7 +203,7 @@ class Users extends Rest
      * Get user info.
      * Return array.
      */
-    protected function getUserInfo($hash)
+    private function getUserInfo($hash)
     {
         $sql = 'SELECT bookshop_users.login,
                        bookshop_discounts.percent,
@@ -223,7 +223,7 @@ class Users extends Rest
      * Get lifetime from the table by login
      * Return time or false
      */
-    protected function getTime($login)
+    private function getTime($login)
     {
         $sql = 'SELECT lifetime FROM bookshop_users WHERE login = :login';
         $result = $this->db->execute($sql, ['login' => $login]);
@@ -235,21 +235,24 @@ class Users extends Rest
     }
 }
 
-try
+if (PHP_SAPI !== 'cli')
 {
-    $api = new Users;
-    $api->table = 'users';
-    $api->play();
-}
-catch (Exception $e)
-{
-    header( "HTTP/1.1 500 Internal Server Error | " . ERROR_HEADER_CODE . $e->getMessage() );
-    header("Content-Type:text/html");
-
-    $string = ERROR_HTML_TEXT;
-    ksort( $patterns = ['/%STATUS_CODE%/', '/%ERROR_DESCRIPTION%/', '/%CODE_NUMBER%/'] );
-    ksort( $replacements = [500, 'Internal Server Error', ERROR_HEADER_CODE . $e->getMessage()] );
-    echo preg_replace($patterns, $replacements, $string);
-
-    exit;
+    try
+    {
+        $api = new Rest( new Users );
+        $api->table = 'users';
+        $api->play();
+    }
+    catch (Exception $e)
+    {
+        header( "HTTP/1.1 500 Internal Server Error | " . ERROR_HEADER_CODE . $e->getMessage() );
+        header("Content-Type:text/html");
+    
+        $string = ERROR_HTML_TEXT;
+        ksort( $patterns = ['/%STATUS_CODE%/', '/%ERROR_DESCRIPTION%/', '/%CODE_NUMBER%/'] );
+        ksort( $replacements = [500, 'Internal Server Error', ERROR_HEADER_CODE . $e->getMessage()] );
+        echo preg_replace($patterns, $replacements, $string);
+    
+        exit;
+    }
 }

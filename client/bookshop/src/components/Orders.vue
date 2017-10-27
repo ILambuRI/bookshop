@@ -75,7 +75,7 @@ export default {
   },
 
   created() {
-    if (!this.user.access) location.href = "/#/"
+    if (!this.user.access) this.$router.push('/')
 
     fetch(this.URL + 'client/api/user/orders/' + this.user.hash, {method: 'GET'})
     .then(this.status)

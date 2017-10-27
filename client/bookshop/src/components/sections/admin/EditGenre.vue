@@ -67,7 +67,7 @@ export default {
         return x[0].genresName
       }
 
-      location.href = '/#/admin'
+      this.$router.push('/admin')
     },
 
     validBtnAccess() {
@@ -132,7 +132,7 @@ export default {
       .then((data) => {
         if (data.server.status == 200) {
           this.adminEvent('Genres')
-          location.href = "/#/admin"
+          this.$router.push('/admin')
         }
         else {
           let error = 'Error in deleteGenre()'+

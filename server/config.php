@@ -22,7 +22,14 @@ spl_autoload_register('autoloadClass');
 // define('M_HOST','localhost');
 // define('M_USER','root');
 // define('M_PASS','');
-// define('M_DB','book_shop');
+
+// if (PHP_SAPI !== 'cli')
+//     define('M_DB','book_shop');
+// else
+// {
+//     define('M_DB','test_book_shop');
+//     define('ADMIN_HASH','f82468c5e5e449cdce6f4595aef3cd78');
+// }
 // define('ERROR_CODE_INFORMATION', 'http://bookshop/server/ErrorCodeInformation.html');
 
 /* MySql Class */

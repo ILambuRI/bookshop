@@ -1,0 +1,12 @@
+User@LambuR-PC MINGW64 /e/OpenServer/domains/bookshop/server/UnitTest (master)
+$ ./vendor/bin/phpunit --bootstrap bootstrap.php
+PHPUnit 5.7.23 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 5.6.23
+Configuration: E:\OpenServer\domains\bookshop\server\UnitTest\phpunit.xml
+
+..........................................................        58 / 58 (100%)
+
+Time: 383 ms, Memory: 6.50MB
+
+OK (58 tests, 212 assertions)

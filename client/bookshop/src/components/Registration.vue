@@ -127,7 +127,7 @@ export default {
 
   created() {
     if (this.user.admin == 0) {
-      if (this.user.access) location.href = "/#/"
+      if (this.user.access) this.$router.push('/')
     }
   },
 
@@ -145,7 +145,7 @@ export default {
       .then((data) => {
         if (data.server.status == 200) {
           if (this.user.admin == 0) {
-            location.href = "/#/"
+            this.$router.push('/')
           }
           else {
             location.reload()

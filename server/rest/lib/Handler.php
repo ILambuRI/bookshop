@@ -28,8 +28,8 @@ class Handler
         $this->typeResponseCode = true;
 	}
 	
-	/** Get data to handling */
-	public function transmitData($data)
+	/** Set data to handling */
+	public function setData($data)
 	{
 		$this->data = $data;
 	}
@@ -69,7 +69,9 @@ class Handler
 		$headerCode = 200;
 		$msg = $this->getCodeMsg($this->code);
 		
-		$dataStack['data'] = $data;
+		if ($data)
+			$dataStack['data'] = $data;
+			
 		$dataStack['server'] = ['status' => $this->code, 'msg' => $msg];
 		
 		$this->setHeaders($headerCode);
@@ -84,7 +86,7 @@ class Handler
 	private function errorTwoHundred($headerText)
 	{
 		$headerCode = 200;
-		$msg = $headerText;
+		$msg = (string)$headerText;
 		
 		$data['server'] = ['status' => $this->code, 'code' => $msg, 'information' => ERROR_CODE_INFORMATION];
 		

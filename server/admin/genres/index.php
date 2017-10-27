@@ -1,18 +1,20 @@
 <?php
-require_once("../../config.php");
+require_once(__DIR__ . "/../../config.php");
 
 use lib\db\BookshopDb as Db;
+use lib\traits\Error;
 use lib\services\Validate;
 use lib\services\Convert;
 
-class Genres extends Rest
+class AdminGenres
 {
+    use Error;
+    
     /**Database object (PDO)*/
     private $db;
     
     public function __construct()
     {
-        parent::__construct();
         $this->db = new Db();
     }
 
@@ -21,25 +23,25 @@ class Genres extends Rest
      * hash(admin) | name(genre) - input.
      * Return 200 or 400+.
      */
-    protected function postGenres()
+    public function postGenres($params)
     {
-        if ( !$this->checkAdminRights($this->params['hash']) )
-            $this->response( '', 406, '033', true );
+        if ( !$this->checkAdminRights($params['hash']) )
+            return $this->error(406, 33);
             
-        if ( !Validate::checkName($this->params['name']) )
-            $this->response( '', 406, '040', true );
+        if ( !Validate::checkName($params['name']) )
+            return $this->error(406, 40);
 
-        if ( $this->checkGenresName($this->params['name']) )
-            $this->response( '', 406, '041', true );
+        if ( $this->checkGenresName($params['name']) )
+            return $this->error(406, 41);
 
         $sql = 'INSERT INTO bookshop_genres (genresName)
                 VALUES (:genresName)';
-        $result = $this->db->execute($sql, ['genresName' => $this->params['name']]);
+        $result = $this->db->execute($sql, ['genresName' => $params['name']]);
 
         if (!$result)
-            $this->response( '', 404, '002', true );
+            return $this->error();
 
-        $this->response();
+        return TRUE;
     }
 
     /**
@@ -47,22 +49,22 @@ class Genres extends Rest
      * hash(admin) | id(genres) | name(new genre) - input.
      * Return 200 or 400+.
      */
-    protected function putGenres()
+    public function putGenres($params)
     {
-        if ( !$this->checkAdminRights($this->params['hash']) )
-            $this->response( '', 406, '033', true );
+        if ( !$this->checkAdminRights($params['hash']) )
+            return $this->error(406, 33);
         
-        if ( !$this->checkGenresId($this->params['id']) )
-            $this->response( '', 404, '042', true );
+        if ( !$this->checkGenresId($params['id']) )
+            return $this->error(404, 42);
             
-        if ( !Validate::checkName($this->params['name']) )
-            $this->response( '', 406, '043', true );
+        if ( !Validate::checkName($params['name']) )
+            return $this->error(406, 43);
 
-        if ( $this->checkGenresName($this->params['name']) )
-            $this->response( '', 406, '044', true );
+        if ( $this->checkGenresName($params['name']) )
+            return $this->error(406, 44);
 
-        $arrParams['id'] = $this->params['id'];
-        $arrParams['genresName'] = $this->params['name'];
+        $arrParams['id'] = $params['id'];
+        $arrParams['genresName'] = $params['name'];
     
         $sql = 'UPDATE bookshop_genres
                 SET genresName = :genresName
@@ -70,9 +72,9 @@ class Genres extends Rest
         $result = $this->db->execute($sql, $arrParams);
 
         if (!$result)
-            $this->response( '', 404, '002', true );
+            return $this->error();
 
-        $this->response();
+        return TRUE;
     }
 
     /**
@@ -81,15 +83,15 @@ class Genres extends Rest
      * Put 0 id (empty) in the binding table.
      * Return 200 or 400+.
      */
-    protected function deleteGenres()
+    public function deleteGenres($params)
     {
-        list($hash, $genreId) = explode('/', $this->params['params'], 3);
+        list($hash, $genreId) = explode('/', $params['params'], 3);
 
         if ( !$this->checkAdminRights($hash) )
-            $this->response( '', 406, '033', true );
+            return $this->error(406, 33);
     
         if ( !$this->checkGenresId($genreId) )
-            $this->response( '', 404, '045', true );
+            return $this->error(404, 45);
         
         $sql = 'UPDATE bookshop_books_to_genres
                 SET id_genre = 0
@@ -101,16 +103,16 @@ class Genres extends Rest
         $result = $this->db->execute($sql, ['id' => $genreId]);
         
         if (!$result)
-            $this->response( '', 404, '002', true );
+            return $this->error();
 
-        $this->response();
+        return TRUE;
     }
 
     /** 
      * Check id in the table genres
      * Return bool
      */
-    protected function checkGenresId($id)
+    private function checkGenresId($id)
     {
         $sql = 'SELECT id FROM bookshop_genres WHERE id = :id';
         $result = $this->db->execute($sql, ['id' => $id]);
@@ -125,7 +127,7 @@ class Genres extends Rest
      * Check name in the table genres
      * Return bool
      */
-    protected function checkGenresName($name)
+    private function checkGenresName($name)
     {
         $sql = 'SELECT genresName FROM bookshop_genres WHERE genresName = :genresName';
         $result = $this->db->execute($sql, ['genresName' => $name]);
@@ -140,7 +142,7 @@ class Genres extends Rest
      * Checking user access by hash.
      * Return bool.
      */
-    protected function checkAdminRights($hash)
+    private function checkAdminRights($hash)
     {
         $sql = 'SELECT admin FROM bookshop_users WHERE hash = :hash';
         $result = $this->db->execute($sql, ['hash' => $hash]);
@@ -152,21 +154,24 @@ class Genres extends Rest
     }
 }
 
-try
+if (PHP_SAPI !== 'cli')
 {
-    $api = new Genres;
-    $api->table = 'genres';
-    $api->play();
-}
-catch (Exception $e)
-{
-    header( "HTTP/1.1 500 Internal Server Error | " . ERROR_HEADER_CODE . $e->getMessage() );
-    header("Content-Type:text/html");
+    try
+    {
+        $api = new Rest( new AdminGenres );
+        $api->table = 'genres';
+        $api->play();
+    }
+    catch (Exception $e)
+    {
+        header( "HTTP/1.1 500 Internal Server Error | " . ERROR_HEADER_CODE . $e->getMessage() );
+        header("Content-Type:text/html");
 
-    $string = ERROR_HTML_TEXT;
-    ksort( $patterns = ['/%STATUS_CODE%/', '/%ERROR_DESCRIPTION%/', '/%CODE_NUMBER%/'] );
-    ksort( $replacements = [500, 'Internal Server Error', ERROR_HEADER_CODE . $e->getMessage()] );
-    echo preg_replace($patterns, $replacements, $string);
+        $string = ERROR_HTML_TEXT;
+        ksort( $patterns = ['/%STATUS_CODE%/', '/%ERROR_DESCRIPTION%/', '/%CODE_NUMBER%/'] );
+        ksort( $replacements = [500, 'Internal Server Error', ERROR_HEADER_CODE . $e->getMessage()] );
+        echo preg_replace($patterns, $replacements, $string);
 
-    exit;
+        exit;
+    }
 }

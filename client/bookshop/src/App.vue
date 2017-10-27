@@ -130,7 +130,8 @@ export default {
           this.user.access = false
           let error = 'Login time has expired, please login!'
           alert(error)
-          location.href = "/#/"
+          
+          this.$router.push('/')
         }
         else {
           let error = 'Error in checkAuth(hash)'+
@@ -138,7 +139,8 @@ export default {
                       '\nError code: ' + data.server.code +
                       '\nInfo: ' + data.server.information
           alert(error)
-          location.href = "/#/"
+
+          this.$router.push('/')
         }
       })
     },
@@ -167,7 +169,7 @@ export default {
         }
       })
 
-      location.href = "/#/"
+      this.$router.push('/')
     },
 
     logIn() {

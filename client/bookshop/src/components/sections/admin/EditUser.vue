@@ -44,7 +44,7 @@
           <!-- Discount -->
           <div class="custom-controls-stacked">
             <span class="float-left font-weight-bold">Select discount:</span>
-            <label v-for="(discount, key) in this.adminData.allDiscounts" :key="key" class="custom-control custom-radio">
+            <label v-for="(discount, key) in adminData.allDiscounts" :key="key" class="custom-control custom-radio">
               <input type="radio" class="custom-control-input" :value="discount.id" v-model="discountId">
               <span class="custom-control-indicator"></span>
               <span class="custom-control-description font-weight-bold">{{ discount.discountsName }} ({{ discount.percent }}%)</span>
@@ -207,7 +207,7 @@ export default {
         return x[0].login
       }
 
-      location.href = '/#/admin'
+      this.$router.push('/admin')
     },
 
 
@@ -258,7 +258,7 @@ export default {
 
   created() {
     if (this.user.admin == 0) {
-      if (this.user.access) location.href = "/#/"
+      if (this.user.access) this.$router.push('/admin')
     }
   },
 

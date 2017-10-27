@@ -2,9 +2,8 @@
 
 use lib\Handler;
 use lib\services\Validate;
-// use lib\services\Convert;
 
-abstract class Rest
+class Rest
 {
 	/** Parameters from the URL */
 	protected $params;
@@ -18,8 +17,11 @@ abstract class Rest
 	/** Data handler object before response */
 	protected $handler;
 
-	protected function __construct()
+	protected $model;
+
+	public function __construct($model)
 	{
+		$this->model = $model;
 		$this->handler = new Handler();
 	}
 	
@@ -62,15 +64,15 @@ abstract class Rest
 			break;
 
 			default:
-				$this->response( '', 406, '000', true );
+				$this->response('', 406, '0');
 			break;
 		}
 	}
 
-	protected function response($data = '', $code = 200, $headerText = false, $info = false)
+	protected function response($data = '', $code = 200, $headerText = false)
     {
 		if ($data)
-			$this->handler->transmitData($data);
+			$this->handler->setData($data);
 
 		$this->handler->setResponseCode($code);
 
@@ -94,9 +96,18 @@ abstract class Rest
 	{
 		$this->fragmentation();
 
-		if ((int)method_exists($this, $this->method) > 0)
-			$this->{$this->method}();
+		if ( (int)method_exists($this->model, $this->method) > 0 )
+		{
+			$result = $this->model->{$this->method}($this->params);
+
+			if ( is_array($result) && $result['status'] )
+				$this->response('', $result['status'], $result['code']);
+			elseif ( is_array($result) )
+				$this->response($result);
+			elseif ($result === TRUE)
+				$this->response();
+		}
 		else
-			$this->response('', 405, '001', true);
+			$this->response('', 405, '1');
     }
 }

@@ -1,16 +1,18 @@
 <?php
-require_once("../../config.php");
+require_once(__DIR__ . "/../../config.php");
 
 use lib\db\BookshopDb as Db;
+use lib\traits\Error;
 
-class Orders extends Rest
+class AdminOrders
 {
+    use Error;
+    
     /**Database object (PDO)*/
     private $db;
     
     public function __construct()
     {
-        parent::__construct();
         $this->db = new Db();
     }
     
@@ -19,10 +21,10 @@ class Orders extends Rest
      * /hash(admin) - input.
      * Return array.
      */
-    protected function getOrdersByParams()
+    public function getOrdersByParams($params)
     {
-        if ( !$this->checkAdminRights($this->params['params']) )
-            $this->response( '', 406, '033', true );
+        if ( !$this->checkAdminRights($params['params']) )
+            return $this->error(406, 33);
 
         $sql = 'SELECT bookshop_orders.id,
                        bookshop_users.login,
@@ -51,10 +53,9 @@ class Orders extends Rest
         $result = $this->db->execute($sql);
 
         if (!$result)
-            $this->response( '', 404, '002', true );
+            return $this->error();
 
-        $orders = $this->formingOrders($result);
-        $this->response($orders);
+        return $this->formingOrders($result);
     }
 
     /**
@@ -62,35 +63,35 @@ class Orders extends Rest
      * hash(admin) | idOrder | idStatus - input.
      * Return 200 or 400+.
      */
-    protected function putOrders()
+    public function putOrders($params)
     {
-        if ( !$this->checkAdminRights($this->params['hash']) )
-            $this->response( '', 406, '033', true );
+        if ( !$this->checkAdminRights($params['hash']) )
+            return $this->error(406, 33);
         
-        if ( !$this->checkOrdersId($this->params['idOrder']) )
-            $this->response( '', 404, '046', true );
+        if ( !$this->checkOrdersId($params['idOrder']) )
+            return $this->error(404, 46);
         
-        if ( !$this->checkStatusId($this->params['idStatus']) )
-            $this->response( '', 404, '047', true );
+        if ( !$this->checkStatusId($params['idStatus']) )
+            return $this->error(404, 47);
         
-        unset($this->params['hash']);
+        unset($params['hash']);
 
         $sql = 'UPDATE bookshop_orders
                 SET id_status = :idStatus
                 WHERE id = :idOrder';
-        $result = $this->db->execute($sql, $this->params);
+        $result = $this->db->execute($sql, $params);
         
         if (!$result)
-            $this->response( '', 404, '002', true );
+            return $this->error();
         
-        $this->response();
+        return TRUE;
     }
 
     /** 
      * Check id in the table status
      * Return bool
      */
-    protected function checkStatusId($id)
+    private function checkStatusId($id)
     {
         $sql = 'SELECT id FROM bookshop_status WHERE id = :id';
         $result = $this->db->execute($sql, ['id' => $id]);
@@ -105,7 +106,7 @@ class Orders extends Rest
      * Check id in the table orders
      * Return bool
      */
-    protected function checkOrdersId($id)
+    private function checkOrdersId($id)
     {
         $sql = 'SELECT id FROM bookshop_orders WHERE id = :id';
         $result = $this->db->execute($sql, ['id' => $id]);
@@ -120,7 +121,7 @@ class Orders extends Rest
      * Checking user access by hash.
      * Return bool.
      */
-    protected function checkAdminRights($hash)
+    private function checkAdminRights($hash)
     {
         $sql = 'SELECT admin FROM bookshop_users WHERE hash = :hash';
         $result = $this->db->execute($sql, ['hash' => $hash]);
@@ -135,7 +136,7 @@ class Orders extends Rest
      * Generating the correct data for the response.
      * Return array.
      */
-    protected function formingOrders($result)
+    private function formingOrders($result)
     {
         $orders = [];
         foreach ($result as $value)
@@ -177,21 +178,24 @@ class Orders extends Rest
     }
 }
 
-try
+if (PHP_SAPI !== 'cli')
 {
-    $api = new Orders;
-    $api->table = 'orders';
-    $api->play();
-}
-catch (Exception $e)
-{
-    header( "HTTP/1.1 500 Internal Server Error | " . ERROR_HEADER_CODE . $e->getMessage() );
-    header("Content-Type:text/html");
+    try
+    {
+        $api = new Rest( new AdminOrders );
+        $api->table = 'orders';
+        $api->play();
+    }
+    catch (Exception $e)
+    {
+        header( "HTTP/1.1 500 Internal Server Error | " . ERROR_HEADER_CODE . $e->getMessage() );
+        header("Content-Type:text/html");
 
-    $string = ERROR_HTML_TEXT;
-    ksort( $patterns = ['/%STATUS_CODE%/', '/%ERROR_DESCRIPTION%/', '/%CODE_NUMBER%/'] );
-    ksort( $replacements = [500, 'Internal Server Error', ERROR_HEADER_CODE . $e->getMessage()] );
-    echo preg_replace($patterns, $replacements, $string);
+        $string = ERROR_HTML_TEXT;
+        ksort( $patterns = ['/%STATUS_CODE%/', '/%ERROR_DESCRIPTION%/', '/%CODE_NUMBER%/'] );
+        ksort( $replacements = [500, 'Internal Server Error', ERROR_HEADER_CODE . $e->getMessage()] );
+        echo preg_replace($patterns, $replacements, $string);
 
-    exit;
+        exit;
+    }
 }

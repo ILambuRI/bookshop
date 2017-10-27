@@ -1,18 +1,20 @@
 <?php
-require_once("../../config.php");
+require_once(__DIR__ . "/../../config.php");
 
 use lib\db\BookshopDb as Db;
+use lib\traits\Error;
 use lib\services\Validate;
 use lib\services\Convert;
 
-class Users extends Rest
+class AdminUsers
 {
+    use Error;
+    
     /**Database object (PDO)*/
     private $db;
     
     public function __construct()
     {
-        parent::__construct();
         $this->db = new Db();
     }
     
@@ -21,14 +23,14 @@ class Users extends Rest
      * /hash(admin)/id(user) - get the user by ID.
      * Return array or 400+.
      */
-    protected function getUsersByParams()
+    public function getUsersByParams($params)
     {
         list($arrParams['hash'],
              $arrParams['id']
-        ) = explode('/', $this->params['params'], 3);
+        ) = explode('/', $params['params'], 3);
 
         if ( !$this->checkAdminRights($arrParams['hash']) )
-            $this->response( '', 406, '033', true );
+            return $this->error(406, 33);
 
         $sql = 'SELECT bookshop_users.id,
                        bookshop_users.login,
@@ -45,7 +47,7 @@ class Users extends Rest
         if ($arrParams['id'])
         {
             if ( !$this->checkUsersId($arrParams['id']) )
-                $this->response( '', 404, '048', true );
+                return $this->error(404, 48);
 
             $sql .= ' WHERE bookshop_users.id = :id';
             $result = $this->db->execute($sql, ['id' => $arrParams['id']]);
@@ -54,9 +56,9 @@ class Users extends Rest
             $result = $this->db->execute($sql);
         
         if (!$result)
-            $this->response( '', 404, '002', true );
+            return $this->error();
 
-        $this->response($result);
+        return $result;
     }
 
     /**
@@ -64,44 +66,44 @@ class Users extends Rest
      * hash(admin) | login | password | phone | idDiscount | admin(1 or 0) | active(1 or 0)- input.
      * Return 200 or 400+.
      */
-    protected function postUsers()
+    public function postUsers($params)
     {
-        if ( !$this->checkAdminRights($this->params['hash']) )
-            $this->response( '', 406, '033', true );
+        if ( !$this->checkAdminRights($params['hash']) )
+            return $this->error(406, 33);
 
-        if ( !Validate::checkLogin($this->params['login']) )
-            $this->response( '', 406, '049', true );
+        if ( !Validate::checkLogin($params['login']) )
+            return $this->error(406, 49);
 
-        if ( !Validate::checkPassword($this->params['password']) )
-            $this->response( '', 406, '050', true );
+        if ( !Validate::checkPassword($params['password']) )
+            return $this->error(406, 50);
 
-        if ( !Validate::checkPhone($this->params['phone']) )
-            $this->response( '', 406, '051', true );
+        if ( !Validate::checkPhone($params['phone']) )
+            return $this->error(406, 51);
 
-        if ( $this->checkLogin($this->params['login']) )
-            $this->response( '', 406, '052', true );
+        if ( $this->checkLogin($params['login']) )
+            return $this->error(406, 52);
 
-        if ( !$this->checkDiscountId($this->params['idDiscount']) )
-            $this->response( '', 404, '053', true );
+        if ( !$this->checkDiscountId($params['idDiscount']) )
+            return $this->error(404, 53);
         
-        if ((int)$this->params['admin'] != 1 && (int)$this->params['admin'] != 0)
-            $this->response( '', 406, '054', true );
+        if ((int)$params['admin'] != 1 && (int)$params['admin'] != 0)
+            return $this->error(406, 54);
         
-        if ((int)$this->params['active'] != 1 && (int)$this->params['active'] != 0)
-            $this->response( '', 406, '055', true );
+        if ((int)$params['active'] != 1 && (int)$params['active'] != 0)
+            return $this->error(406, 55);
         
-        $this->params['password'] = Convert::toMd5($this->params['password']);
-        $this->params['hash'] = Convert::toMd5( $this->params['login'] . rand(12345, PHP_INT_MAX) );
-        $this->params['lifetime'] = time();
+        $params['password'] = Convert::toMd5($params['password']);
+        $params['hash'] = Convert::toMd5( $params['login'] . rand(12345, PHP_INT_MAX) );
+        $params['lifetime'] = time();
 
         $sql = 'INSERT INTO bookshop_users (login, password, phone, id_discount, hash, lifetime, admin, active)
                 VALUES (:login, :password, :phone, :idDiscount, :hash, :lifetime, :admin, :active)';
-        $result = $this->db->execute($sql, $this->params);
+        $result = $this->db->execute($sql, $params);
 
         if (!$result)
-            $this->response( '', 404, '002', true );
+            return $this->error();
 
-        $this->response();
+        return TRUE;
     }
 
     /**
@@ -109,35 +111,35 @@ class Users extends Rest
      * hash(admin) | id(users) | login | password | phone | idDiscount | admin(1 or 0) | active(1 or 0)- input.
      * Return 200 or 400+.
      */
-    protected function putUsers()
+    public function putUsers($params)
     {
-        if ( !$this->checkAdminRights($this->params['hash']) )
-            $this->response( '', 406, '033', true );
+        if ( !$this->checkAdminRights($params['hash']) )
+            return $this->error(406, 33);
 
-        if ( !$this->checkUsersId($this->params['id']) )
-            $this->response( '', 404, '056', true );
+        if ( !$this->checkUsersId($params['id']) )
+            return $this->error(404, 56);
 
-        if ( !Validate::checkLogin($this->params['login']) )
-            $this->response( '', 406, '057', true );
+        if ( !Validate::checkLogin($params['login']) )
+            return $this->error(406, 57);
 
-        if ( !Validate::checkPassword($this->params['password']) )
-            $this->response( '', 406, '058', true );
+        if ( !Validate::checkPassword($params['password']) )
+            return $this->error(406, 58);
 
-        if ( !Validate::checkPhone($this->params['phone']) )
-            $this->response( '', 406, '059', true );
+        if ( !Validate::checkPhone($params['phone']) )
+            return $this->error(406, 59);
 
-        if ( !$this->checkDiscountId($this->params['idDiscount']) )
-            $this->response( '', 404, '060', true );
+        if ( !$this->checkDiscountId($params['idDiscount']) )
+            return $this->error(406, 60);
         
-        if ((int)$this->params['admin'] != 1 && (int)$this->params['admin'] != 0)
-            $this->response( '', 406, '061', true );
+        if ((int)$params['admin'] != 1 && (int)$params['admin'] != 0)
+            return $this->error(406, 61);
         
-        if ((int)$this->params['active'] != 1 && (int)$this->params['active'] != 0)
-            $this->response( '', 406, '062', true );
+        if ((int)$params['active'] != 1 && (int)$params['active'] != 0)
+            return $this->error(406, 62);
         
-        $this->params['password'] = Convert::toMd5($this->params['password']);
-        $this->params['hash'] = Convert::toMd5( $this->params['login'] . rand(12345, PHP_INT_MAX) );
-        $this->params['lifetime'] = time();
+        $params['password'] = Convert::toMd5($params['password']);
+        $params['hash'] = Convert::toMd5( $params['login'] . rand(12345, PHP_INT_MAX) );
+        $params['lifetime'] = time();
 
         $sql = 'UPDATE bookshop_users
                 SET login = :login,
@@ -149,19 +151,19 @@ class Users extends Rest
                     active = :active,
                     id_discount = :idDiscount
                 WHERE id = :id';
-        $result = $this->db->execute($sql, $this->params);
+        $result = $this->db->execute($sql, $params);
 
         if (!$result)
-            $this->response( '', 404, '002', true );
+            return $this->error();
 
-        $this->response();
+        return TRUE;
     }
 
     /** 
      * Checking user access by hash.
      * Return bool.
      */
-    protected function checkAdminRights($hash)
+    private function checkAdminRights($hash)
     {
         $sql = 'SELECT admin FROM bookshop_users WHERE hash = :hash';
         $result = $this->db->execute($sql, ['hash' => $hash]);
@@ -176,7 +178,7 @@ class Users extends Rest
      * Check id in the table users.
      * Return bool.
      */
-    protected function checkUsersId($id)
+    private function checkUsersId($id)
     {
         $sql = 'SELECT id FROM bookshop_users WHERE id = :id';
         $result = $this->db->execute($sql, ['id' => $id]);
@@ -191,7 +193,7 @@ class Users extends Rest
      * Check id in the table discounts.
      * Return bool.
      */
-    protected function checkDiscountId($id)
+    private function checkDiscountId($id)
     {
         $sql = 'SELECT id FROM bookshop_discounts WHERE id = :id';
         $result = $this->db->execute($sql, ['id' => $id]);
@@ -206,7 +208,7 @@ class Users extends Rest
      * Check login in the table users.
      * Return bool.
      */
-    protected function checkLogin($login)
+    private function checkLogin($login)
     {
         $sql = 'SELECT login FROM bookshop_users WHERE login = :login';
         $result = $this->db->execute($sql, ['login' => $login]);
@@ -218,21 +220,24 @@ class Users extends Rest
     }
 }
 
-try
+if (PHP_SAPI !== 'cli')
 {
-    $api = new Users;
-    $api->table = 'users';
-    $api->play();
-}
-catch (Exception $e)
-{
-    header( "HTTP/1.1 500 Internal Server Error | " . ERROR_HEADER_CODE . $e->getMessage() );
-    header("Content-Type:text/html");
+    try
+    {
+        $api = new Rest( new AdminUsers );
+        $api->table = 'users';
+        $api->play();
+    }
+    catch (Exception $e)
+    {
+        header( "HTTP/1.1 500 Internal Server Error | " . ERROR_HEADER_CODE . $e->getMessage() );
+        header("Content-Type:text/html");
 
-    $string = ERROR_HTML_TEXT;
-    ksort( $patterns = ['/%STATUS_CODE%/', '/%ERROR_DESCRIPTION%/', '/%CODE_NUMBER%/'] );
-    ksort( $replacements = [500, 'Internal Server Error', ERROR_HEADER_CODE . $e->getMessage()] );
-    echo preg_replace($patterns, $replacements, $string);
+        $string = ERROR_HTML_TEXT;
+        ksort( $patterns = ['/%STATUS_CODE%/', '/%ERROR_DESCRIPTION%/', '/%CODE_NUMBER%/'] );
+        ksort( $replacements = [500, 'Internal Server Error', ERROR_HEADER_CODE . $e->getMessage()] );
+        echo preg_replace($patterns, $replacements, $string);
 
-    exit;
+        exit;
+    }
 }

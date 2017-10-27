@@ -66,7 +66,6 @@
 
 <script>
 import app from '../../static/config'
-// import addUser from './Registration'
 
 export default {
   name: 'Admin',
@@ -95,7 +94,7 @@ export default {
   },
 
   created() {
-    if (this.user.admin != 1) location.href = "/#/"
+    if (!this.user.access || this.user.admin != 1) this.$router.push('/')
     
     this.getAuthors()
     this.getGenres()

@@ -1,18 +1,20 @@
 <?php
-require_once("../../config.php");
+require_once(__DIR__ . "/../../config.php");
 
 use lib\db\BookshopDb as Db;
+use lib\traits\Error;
 use lib\services\Validate;
 use lib\services\Convert;
 
-class Authors extends Rest
+class AdminAuthors
 {
+    use Error;
+    
     /**Database object (PDO)*/
     private $db;
     
     public function __construct()
     {
-        parent::__construct();
         $this->db = new Db();
     }
 
@@ -21,25 +23,25 @@ class Authors extends Rest
      * hash(admin) | name(author) - input.
      * Return 200 or 400+.
      */
-    protected function postAuthors()
+    public function postAuthors($params)
     {
-        if ( !$this->checkAdminRights($this->params['hash']) )
-            $this->response( '', 406, '033', true );
+        if ( !$this->checkAdminRights($params['hash']) )
+            return $this->error(406, 33);
             
-        if ( !Validate::checkName($this->params['name']) )
-            $this->response( '', 406, '034', true );
+        if ( !Validate::checkName($params['name']) )
+            return $this->error(406, 34);
 
-        if ( $this->checkAuthorsName($this->params['name']) )
-            $this->response( '', 406, '038', true );
+        if ( $this->checkAuthorsName($params['name']) )
+            return $this->error(406, 38);
 
         $sql = 'INSERT INTO bookshop_authors (authorsName)
                 VALUES (:authorsName)';
-        $result = $this->db->execute($sql, ['authorsName' => $this->params['name']]);
+        $result = $this->db->execute($sql, ['authorsName' => $params['name']]);
 
         if (!$result)
-            $this->response( '', 404, '002', true );
+            return $this->error();
 
-        $this->response();
+        return TRUE;
     }
 
     /**
@@ -47,22 +49,22 @@ class Authors extends Rest
      * hash(admin) | id(authors) | name(new author) - input.
      * Return 200 or 400+.
      */
-    protected function putAuthors()
+    public function putAuthors($params)
     {
-        if ( !$this->checkAdminRights($this->params['hash']) )
-            $this->response( '', 406, '033', true );
+        if ( !$this->checkAdminRights($params['hash']) )
+            return $this->error(406, 33);
         
-        if ( !$this->checkAuthorsId($this->params['id']) )
-            $this->response( '', 404, '035', true );
+        if ( !$this->checkAuthorsId($params['id']) )
+            return $this->error(406, 35);
             
-        if ( !Validate::checkName($this->params['name']) )
-            $this->response( '', 406, '036', true );
+        if ( !Validate::checkName($params['name']) )
+            return $this->error(406, 36);
 
-        if ( $this->checkAuthorsName($this->params['name']) )
-            $this->response( '', 406, '039', true );
+        if ( $this->checkAuthorsName($params['name']) )
+            return $this->error(406, 39);
 
-        $arrParams['id'] = $this->params['id'];
-        $arrParams['authorsName'] = $this->params['name'];
+        $arrParams['id'] = $params['id'];
+        $arrParams['authorsName'] = $params['name'];
     
         $sql = 'UPDATE bookshop_authors
                 SET authorsName = :authorsName
@@ -70,9 +72,9 @@ class Authors extends Rest
         $result = $this->db->execute($sql, $arrParams);
 
         if (!$result)
-            $this->response( '', 404, '002', true );
+            return $this->error();
 
-        $this->response();
+        return TRUE;
     }
 
     /**
@@ -81,15 +83,15 @@ class Authors extends Rest
      * Put 0 id (empty) in the binding table.
      * Return 200 or 400+.
      */
-    protected function deleteAuthors()
+    public function deleteAuthors($params)
     {
-        list($hash, $authorId) = explode('/', $this->params['params'], 3);
+        list($hash, $authorId) = explode('/', $params['params'], 3);
 
         if ( !$this->checkAdminRights($hash) )
-            $this->response( '', 406, '033', true );
+            return $this->error(406, 33);
     
         if ( !$this->checkAuthorsId($authorId) )
-            $this->response( '', 404, '037', true );
+            return $this->error(404, 37);
         
         $sql = 'UPDATE bookshop_books_to_authors
                 SET id_author = 0
@@ -101,16 +103,16 @@ class Authors extends Rest
         $result = $this->db->execute($sql, ['id' => $authorId]);
         
         if (!$result)
-            $this->response( '', 404, '002', true );
+            return $this->error();
 
-        $this->response();
+        return TRUE;
     }
 
     /** 
      * Check id in the table authors
      * Return bool
      */
-    protected function checkAuthorsId($id)
+    private function checkAuthorsId($id)
     {
         $sql = 'SELECT id FROM bookshop_authors WHERE id = :id';
         $result = $this->db->execute($sql, ['id' => $id]);
@@ -125,7 +127,7 @@ class Authors extends Rest
      * Check name in the table authors
      * Return bool
      */
-    protected function checkAuthorsName($name)
+    private function checkAuthorsName($name)
     {
         $sql = 'SELECT authorsName FROM bookshop_authors WHERE authorsName = :authorsName';
         $result = $this->db->execute($sql, ['authorsName' => $name]);
@@ -140,7 +142,7 @@ class Authors extends Rest
      * Checking user access by hash.
      * Return bool.
      */
-    protected function checkAdminRights($hash)
+    private function checkAdminRights($hash)
     {
         $sql = 'SELECT admin FROM bookshop_users WHERE hash = :hash';
         $result = $this->db->execute($sql, ['hash' => $hash]);
@@ -152,21 +154,24 @@ class Authors extends Rest
     }
 }
 
-try
+if (PHP_SAPI !== 'cli')
 {
-    $api = new Authors;
-    $api->table = 'authors';
-    $api->play();
-}
-catch (Exception $e)
-{
-    header( "HTTP/1.1 500 Internal Server Error | " . ERROR_HEADER_CODE . $e->getMessage() );
-    header("Content-Type:text/html");
+    try
+    {
+        $api = new Rest( new AdminAuthors );
+        $api->table = 'authors';
+        $api->play();
+    }
+    catch (Exception $e)
+    {
+        header( "HTTP/1.1 500 Internal Server Error | " . ERROR_HEADER_CODE . $e->getMessage() );
+        header("Content-Type:text/html");
 
-    $string = ERROR_HTML_TEXT;
-    ksort( $patterns = ['/%STATUS_CODE%/', '/%ERROR_DESCRIPTION%/', '/%CODE_NUMBER%/'] );
-    ksort( $replacements = [500, 'Internal Server Error', ERROR_HEADER_CODE . $e->getMessage()] );
-    echo preg_replace($patterns, $replacements, $string);
+        $string = ERROR_HTML_TEXT;
+        ksort( $patterns = ['/%STATUS_CODE%/', '/%ERROR_DESCRIPTION%/', '/%CODE_NUMBER%/'] );
+        ksort( $replacements = [500, 'Internal Server Error', ERROR_HEADER_CODE . $e->getMessage()] );
+        echo preg_replace($patterns, $replacements, $string);
 
-    exit;
+        exit;
+    }
 }

@@ -1,16 +1,18 @@
 <?php
-require_once("../../config.php");
+require_once(__DIR__ . "/../../config.php");
 
 use lib\db\BookshopDb as Db;
+use lib\traits\Error;
 
-class Books extends Rest
+class Books
 {
+    use Error;
+
     /**Database object (PDO)*/
     private $db;
 
     public function __construct()
     {
-        parent::__construct();
         $this->db = new Db();
     }
     
@@ -18,7 +20,7 @@ class Books extends Rest
      * Get the whole table of books.
      * Return array.
      */
-    protected function getBooks()
+    public function getBooks()
     {
         $sql = 'SELECT bookshop_books.id,
                        bookshop_books.description,
@@ -47,10 +49,9 @@ class Books extends Rest
         $result = $this->db->execute($sql);
 
         if (!$result)
-            $this->response( '', 404, '002', true );
+            return $this->error();
 
-        $books = $this->formingBooks($result);
-        $this->response($books);
+        return $this->formingBooks($result);
     }
     
     /**
@@ -60,12 +61,12 @@ class Books extends Rest
      * /false(null)/false(null)/id(genres).
      * Return array.
      */
-    protected function getBooksByParams()
+    public function getBooksByParams($params)
     {
         list($arrParams['idBooks'],
              $arrParams['idAuthors'],
              $arrParams['idGenres']
-        ) = explode('/', $this->params['params'], 4);
+        ) = explode('/', $params['params'], 4);
 
         $sql = 'SELECT bookshop_books.id,
                        bookshop_books.description,
@@ -92,18 +93,17 @@ class Books extends Rest
                     ON bookshop_books.id_discount = bookshop_discounts.id';
 
         if ( !$condition = $this->conditionSwitch($sql, $arrParams) )
-            $this->response( '', 404, '063', true );
+            return $this->error(404, 63);
 
         $result = $this->db->execute($condition['sql'], ['id' => $condition['id']]);
 
         if (!$result)
-            $this->response( '', 404, '002', true );
+            return $this->error();
 
-        $books = $this->formingBooks($result);
-        $this->response($books);
+        return $this->formingBooks($result);
     }
 
-    protected function formingBooks($result)
+    private function formingBooks($result)
     {
         $books = [];
         foreach ($result as $value)
@@ -158,7 +158,7 @@ class Books extends Rest
         return $books;
     }
 
-    protected function conditionSwitch($sql, $arrParams)
+    private function conditionSwitch($sql, $arrParams)
     {
         if ( (int)$arrParams['idBooks'] )
         {
@@ -183,21 +183,24 @@ class Books extends Rest
     }
 }
 
-try
+if (PHP_SAPI !== 'cli')
 {
-    $api = new Books;
-    $api->table = 'books';
-    $api->play();
-}
-catch (Exception $e)
-{
-    header( "HTTP/1.1 500 Internal Server Error | " . ERROR_HEADER_CODE . $e->getMessage() );
-    header("Content-Type:text/html");
-
-    $string = ERROR_HTML_TEXT;
-    ksort( $patterns = ['/%STATUS_CODE%/', '/%ERROR_DESCRIPTION%/', '/%CODE_NUMBER%/'] );
-    ksort( $replacements = [500, 'Internal Server Error', ERROR_HEADER_CODE . $e->getMessage()] );
-    echo preg_replace($patterns, $replacements, $string);
-
-    exit;
+    try
+    {
+        $api = new Rest( new Books );
+        $api->table = 'books';
+        $api->play();
+    }
+    catch (Exception $e)
+    {
+        header( "HTTP/1.1 500 Internal Server Error | " . ERROR_HEADER_CODE . $e->getMessage() );
+        header("Content-Type:text/html");
+    
+        $string = ERROR_HTML_TEXT;
+        ksort( $patterns = ['/%STATUS_CODE%/', '/%ERROR_DESCRIPTION%/', '/%CODE_NUMBER%/'] );
+        ksort( $replacements = [500, 'Internal Server Error', ERROR_HEADER_CODE . $e->getMessage()] );
+        echo preg_replace($patterns, $replacements, $string);
+    
+        exit;
+    }
 }

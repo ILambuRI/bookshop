@@ -42,7 +42,7 @@
             <!-- Discount -->
             <div class="custom-controls-stacked">
               <span class="float-left font-weight-bold">Select discount:</span>
-              <label v-for="(discount, key) in this.adminData.allDiscounts" :key="key" class="custom-control custom-radio">
+              <label v-for="(discount, key) in adminData.allDiscounts" :key="key" class="custom-control custom-radio">
                 <input type="radio" class="custom-control-input" :value="discount.id" v-model="discountId">
                 <span class="custom-control-indicator"></span>
                 <span class="custom-control-description font-weight-bold">{{ discount.discountsName }} ({{ discount.percent }}%)</span>
@@ -55,7 +55,7 @@
           <div class="form-group">
             <label class="float-left font-weight-bold">Select Author(s):</label>
             <select class="form-control" multiple size="5" v-model="authorsId">
-              <option v-for="(author, key) in this.adminData.allAuthors" :key="key" :value="author.id">
+              <option v-for="(author, key) in adminData.allAuthors" :key="key" :value="author.id">
                 {{ author.authorsName }}
               </option>
             </select>
@@ -64,7 +64,7 @@
           <div class="form-group">
             <label class="float-left font-weight-bold">Select Genre(s):</label>
             <select class="form-control" multiple size="5" v-model="genresId">
-              <option v-for="(genre, key) in this.adminData.allGenres" :key="key" :value="genre.id">
+              <option v-for="(genre, key) in adminData.allGenres" :key="key" :value="genre.id">
                 {{ genre.genresName }}
               </option>
             </select>

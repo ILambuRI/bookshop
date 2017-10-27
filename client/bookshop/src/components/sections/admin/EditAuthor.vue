@@ -67,7 +67,7 @@ export default {
         return x[0].authorsName
       }
 
-      location.href = '/#/admin'
+      this.$router.push('/admin')
     },
 
     validBtnAccess() {
@@ -132,7 +132,7 @@ export default {
       .then((data) => {
         if (data.server.status == 200) {
           this.adminEvent('Authors')
-          location.href = "/#/admin"
+          this.$router.push('/admin')
         }
         else {
           let error = 'Error in deleteAuthor()'+

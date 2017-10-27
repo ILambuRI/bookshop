@@ -1,16 +1,18 @@
 <?php
-require_once("../../config.php");
+require_once(__DIR__ . "/../../config.php");
 
 use lib\db\BookshopDb as Db;
+use lib\traits\Error;
 
-class Orders extends Rest
+class Orders
 {
+    use Error;
+    
     /**Database object (PDO)*/
     private $db;
     
     public function __construct()
     {
-        parent::__construct();
         $this->db = new Db();
     }
     
@@ -19,10 +21,10 @@ class Orders extends Rest
      * /hash - input.
      * Return array.
      */
-    protected function getOrdersByParams()
+    public function getOrdersByParams($params)
     {
-        if ( !$userInfo = $this->getUserInfoByHash($this->params['params']) )
-            $this->response( '', 404, '030', true );
+        if ( !$userInfo = $this->getUserInfoByHash($params['params']) )
+            return $this->error(404, 30);
     
         $sql = 'SELECT bookshop_orders.id,
                        bookshop_books.booksName,
@@ -48,10 +50,9 @@ class Orders extends Rest
         $result = $this->db->execute($sql, ['id' => $userInfo[0]['id']]);
 
         if (!$result)
-            $this->response( '', 404, '002', true );
+            return $this->error();
 
-        $orders = $this->formingOrders($result);
-        $this->response($orders);
+        return $this->formingOrders($result);
     }
 
     /**
@@ -59,18 +60,18 @@ class Orders extends Rest
      * hash | id(payment) - input.
      * Return 200 or 400+.
      */
-    protected function postOrders()
+    public function postOrders($params)
     {
-        if ( !$userInfo = $this->getUserInfoByHash($this->params['hash']) )
-            $this->response( '', 404, '027', true );
+        if ( !$userInfo = $this->getUserInfoByHash($params['hash']) )
+            return $this->error(404, 27);
         
-        if ( !$this->checkPaymentId($this->params['id']) )
-            $this->response( '', 404, '028', true );
+        if ( !$this->checkPaymentId($params['id']) )
+            return $this->error(404, 28);
 
         $cartData = $this->getUserCartData($userInfo[0]['id']);
 
         if (!$cartData)
-            $this->response( '', 404, '029', true );
+            return $this->error(404, 29);
         
         /* Forming parameters for a transaction in a table info_order */
         $transactionParams[1]['sql'] = 'INSERT INTO bookshop_info_order (id_order, id_book, bookDiscount, count, bookTotalPrice)
@@ -92,7 +93,7 @@ class Orders extends Rest
 
         /* Forming parameters for a transaction in a table order */
         $order['id_user'] = $userInfo[0]['id'];
-        $order['id_payment'] = $this->params['id'];
+        $order['id_payment'] = $params['id'];
         $order['clientDiscount'] = $userInfo[0]['percent'];
 
         if ((int)$order['clientDiscount'])
@@ -110,14 +111,14 @@ class Orders extends Rest
         $result = $this->db->execTransaction($transactionParams, true);
 
         if (!$result)
-            $this->response( '', 404, '032', true );
+            return $this->error(404, 32);
         
         /* Clear user cart */
         $sql = 'DELETE FROM bookshop_cart
                 WHERE id_user = :id_user';
         $this->db->execute($sql, ['id_user' => $userInfo[0]['id']]);
         
-        $this->response();
+        return TRUE;
     }
 
 
@@ -125,7 +126,7 @@ class Orders extends Rest
      * Get user id and discount from the table users by hash.
      * Return id and percent or false.
      */
-    protected function getUserInfoByHash($hash)
+    private function getUserInfoByHash($hash)
     {
         $sql = 'SELECT bookshop_users.id,
                        bookshop_discounts.percent
@@ -145,7 +146,7 @@ class Orders extends Rest
      * Get data from user cart by id.
      * Return array.
      */
-    protected function getUserCartData($id)
+    private function getUserCartData($id)
     {
         $sql = 'SELECT bookshop_cart.id_book,
                        bookshop_cart.count,
@@ -169,7 +170,7 @@ class Orders extends Rest
      * Check id in the table payment.
      * Return bool.
      */
-    protected function checkPaymentId($id)
+    private function checkPaymentId($id)
     {
         $sql = 'SELECT id FROM bookshop_payment WHERE id = :id';
         $result = $this->db->execute($sql, ['id' => $id]);
@@ -184,7 +185,7 @@ class Orders extends Rest
      * Generating the correct data for the response.
      * Return array.
      */
-    protected function formingOrders($result)
+    private function formingOrders($result)
     {
         $orders = [];
         foreach ($result as $value)
@@ -224,21 +225,24 @@ class Orders extends Rest
     }
 }
 
-try
+if (PHP_SAPI !== 'cli')
 {
-    $api = new Orders;
-    $api->table = 'orders';
-    $api->play();
-}
-catch (Exception $e)
-{
-    header( "HTTP/1.1 500 Internal Server Error | " . ERROR_HEADER_CODE . $e->getMessage() );
-    header("Content-Type:text/html");
-
-    $string = ERROR_HTML_TEXT;
-    ksort( $patterns = ['/%STATUS_CODE%/', '/%ERROR_DESCRIPTION%/', '/%CODE_NUMBER%/'] );
-    ksort( $replacements = [500, 'Internal Server Error', ERROR_HEADER_CODE . $e->getMessage()] );
-    echo preg_replace($patterns, $replacements, $string);
-
-    exit;
+    try
+    {
+        $api = new Rest( new Orders );
+        $api->table = 'orders';
+        $api->play();
+    }
+    catch (Exception $e)
+    {
+        header( "HTTP/1.1 500 Internal Server Error | " . ERROR_HEADER_CODE . $e->getMessage() );
+        header("Content-Type:text/html");
+    
+        $string = ERROR_HTML_TEXT;
+        ksort( $patterns = ['/%STATUS_CODE%/', '/%ERROR_DESCRIPTION%/', '/%CODE_NUMBER%/'] );
+        ksort( $replacements = [500, 'Internal Server Error', ERROR_HEADER_CODE . $e->getMessage()] );
+        echo preg_replace($patterns, $replacements, $string);
+    
+        exit;
+    }
 }

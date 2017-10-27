@@ -1,16 +1,18 @@
 <?php
-require_once("../../config.php");
+require_once(__DIR__ . "/../../config.php");
 
 use lib\db\BookshopDb as Db;
+use lib\traits\Error;
 
-class Authors extends Rest
+class Authors
 {
+    use Error;
+
     /**Database object (PDO)*/
     private $db;
 
     public function __construct()
     {
-        parent::__construct();
         $this->db = new Db();
     }
     
@@ -19,7 +21,7 @@ class Authors extends Rest
      * Delete 0 ID (Empty) from the result.
      * Return array grouped by id.
      */
-    protected function getAuthors()
+    public function getAuthors()
     {
         $sql = 'SELECT bookshop_authors.id,
                        bookshop_authors.authorsName
@@ -29,11 +31,11 @@ class Authors extends Rest
         $result = $this->db->execute($sql);
 
         if (!$result)
-            $this->response( '', 404, '002', true );
+            return $this->error();
 
         array_splice($result, 0, 1);
 
-        $this->response($result);
+        return $result;
     }
     
     /**
@@ -41,11 +43,12 @@ class Authors extends Rest
      * /id - input.
      * Return array.
      */
-    protected function getAuthorsByParams()
+    public function getAuthorsByParams($params)
     {
-        $id = $this->params['params'];
-        if ($id == '0')
-            $this->response( '', 404, '002', true );
+        $id = $params['params'];
+
+        if (!(int)$id || $id == '0')
+            return $this->error();
         
         $sql = 'SELECT bookshop_authors.id,
                        bookshop_authors.authorsName
@@ -56,27 +59,30 @@ class Authors extends Rest
         $result = $this->db->execute($sql, ['id' => $id]);
 
         if (!$result)
-            $this->response( '', 404, '002', true );
+            return $this->error();
 
-        $this->response($result);
+        return $result;
     }
 }
 
-try
+if (PHP_SAPI !== 'cli')
 {
-    $api = new Authors;
-    $api->table = 'authors';
-    $api->play();
-}
-catch (Exception $e)
-{
-    header( "HTTP/1.1 500 Internal Server Error | " . ERROR_HEADER_CODE . $e->getMessage() );
-    header("Content-Type:text/html");
-
-    $string = ERROR_HTML_TEXT;
-    ksort( $patterns = ['/%STATUS_CODE%/', '/%ERROR_DESCRIPTION%/', '/%CODE_NUMBER%/'] );
-    ksort( $replacements = [500, 'Internal Server Error', ERROR_HEADER_CODE . $e->getMessage()] );
-    echo preg_replace($patterns, $replacements, $string);
-
-    exit;
+    try
+    {
+        $api = new Rest( new Authors );
+        $api->table = 'authors';
+        $api->play();
+    }
+    catch (Exception $e)
+    {
+        header( "HTTP/1.1 500 Internal Server Error | " . ERROR_HEADER_CODE . $e->getMessage() );
+        header("Content-Type:text/html");
+    
+        $string = ERROR_HTML_TEXT;
+        ksort( $patterns = ['/%STATUS_CODE%/', '/%ERROR_DESCRIPTION%/', '/%CODE_NUMBER%/'] );
+        ksort( $replacements = [500, 'Internal Server Error', ERROR_HEADER_CODE . $e->getMessage()] );
+        echo preg_replace($patterns, $replacements, $string);
+    
+        exit;
+    }
 }
